@@ -18,36 +18,7 @@ public class MainWindow {
     }
 
     private void SetupUI(){
-        // --- 1. Create UI components ---
-       /* Canvas canvas = new Canvas(500, 400);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        StackPane canvasPane = new StackPane(canvas);
-        // Bind canvas size to container
-        canvas.widthProperty().bind(canvasPane.widthProperty());
-        canvas.heightProperty().bind(canvasPane.heightProperty());
 
-        // Redraw on resize
-        canvas.widthProperty().addListener((obs, o, n) -> draw(gc, canvas));
-        canvas.heightProperty().addListener((obs, o, n) -> draw(gc, canvas));
-
-        // Buttons
-
-        // --- 2. Create layout ---
-        BorderPane root = new BorderPane();
-        root.setCenter(canvasPane);   // canvas in center// Bind canvas size to parent
-
-        // --- 3. Create scene ---
-        Scene scene = new Scene(root, 600, 450); // include toolbar in height
-
-        // --- 4. Set scene to stage ---
-        stage.setScene(scene);
-        stage.setTitle("Path Finder");
-
-        // --- 5. Show stage ---
-        stage.show();
-
-        // --- 6. (Optional) Event handling after setup) ---*/
-        // Toolbar buttons
         Button runBtn = new Button("Run");
         Button resetBtn = new Button("Reset");
 

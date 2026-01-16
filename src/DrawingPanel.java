@@ -6,27 +6,34 @@ import javafx.scene.paint.Color;
 public class DrawingPanel extends StackPane {
     private final Canvas canvas;
     private final GraphicsContext gc;
-    private double Grid = 10;
+    private int Size = 10;
+    Grid grid;
+    double tileWidth;
+    double tileHeight;
 
     public DrawingPanel() {
         canvas = new Canvas();
-        gc = canvas.getGraphicsContext2D();
 
+        gc = canvas.getGraphicsContext2D();
+        grid = new Grid(Size);
+        // THIS LINE IS CRITICAL
         getChildren().add(canvas);
 
-        // Resize handling
+        // Resize canvas with panel
         canvas.widthProperty().bind(widthProperty());
         canvas.heightProperty().bind(heightProperty());
 
+        // Redraw on resize
         canvas.widthProperty().addListener((obs, o, n) -> draw());
         canvas.heightProperty().addListener((obs, o, n) -> draw());
+
+       setupMouseHandlers();
 
         draw();
     }
 
     private void draw() {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
         DrawGrid();
     }
 
@@ -48,18 +55,44 @@ public class DrawingPanel extends StackPane {
     }
 
     private void DrawGrid(){
-        double tilewidth = canvas.getWidth() / Grid;
-        double tileheight = canvas.getHeight() / Grid;
+        tileWidth = canvas.getWidth() / Size;
+        tileHeight = canvas.getHeight() / Size;
 
         gc.setStroke(Color.BLACK);
 
-        for(int i = 0; i < Grid; i++){
-            for(int j = 0; j < Grid; j++){
-                double tileX = tilewidth * i;
-                double tileY = tileheight * j;
-                gc.setFill(Color.WHITE);
-                gc.strokeRect(tileX, tileY, tilewidth, tileheight);
+        for (int x = 0; x < grid.GetSize(); x++) {
+            for (int y = 0; y < grid.GetSize(); y++) {
+                Tile tile = grid.GetTile(x, y);
+
+                double px = x * tileWidth;
+                double py = y * tileHeight;
+
+                if (!tile.walkable)
+                    gc.setFill(Color.BLUE);
+                else
+                    gc.setFill(Color.WHITE);
+
+                gc.fillRect(px, py, tileWidth, tileHeight);
+                gc.strokeRect(px, py, tileWidth, tileHeight);
             }
         }
+    }
+
+    public Canvas GetCanvas(){
+        return canvas;
+    }
+
+    private void setupMouseHandlers() {
+        canvas.setOnMouseClicked(e -> {
+            System.out.println("Clicked at: " + e.getX() + ", " + e.getY());
+            int x = (int) (e.getX() / tileWidth);
+            int y = (int) (e.getY() / tileHeight);
+
+            Tile tile = grid.GetTile(x, y);
+            if (tile != null) {
+                tile.walkable = !tile.walkable;
+                draw();
+            }
+        });
     }
 }
