@@ -8,7 +8,7 @@ public class Grid {
         tiles = new Tile[size][size];
         for(int x = 0; x < size; x++){
             for(int y = 0; y < size; y++) {
-                tiles[x][y] = new Tile();
+                tiles[x][y] = new Tile(x, y);
             }
         }
     }

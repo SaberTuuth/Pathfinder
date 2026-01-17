@@ -11,10 +11,8 @@ public class Tile {
         x = 0;
         y =0;
     }
-    public Tile(int Row, int Colum, double X, double Y){
+    public Tile(int Row, int Colum){
         row = Row;
         colum = Colum;
-        x = X;
-        y = Y;
     }
 }

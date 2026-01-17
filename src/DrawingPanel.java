@@ -11,6 +11,8 @@ public class DrawingPanel extends StackPane {
     double tileWidth;
     double tileHeight;
 
+    private PathSearch pathSearch;
+
     public DrawingPanel() {
         canvas = new Canvas();
 
@@ -22,6 +24,9 @@ public class DrawingPanel extends StackPane {
         // Resize canvas with panel
         canvas.widthProperty().bind(widthProperty());
         canvas.heightProperty().bind(heightProperty());
+
+        pathSearch = new PathSearch();
+        pathSearch.Initialize(grid);
 
         // Redraw on resize
         canvas.widthProperty().addListener((obs, o, n) -> draw());
@@ -76,6 +81,21 @@ public class DrawingPanel extends StackPane {
                 gc.strokeRect(px, py, tileWidth, tileHeight);
             }
         }
+    }
+
+    private void drawLineBetweenTiles(Tile a, Tile b) {
+        double tileW = canvas.getWidth() / Size;
+        double tileH = canvas.getHeight() / Size;
+
+        double x1 = a.colum * tileW + tileW / 2;
+        double y1 = a.row * tileH + tileH / 2;
+
+        double x2 = b.colum * tileW + tileW / 2;
+        double y2 = b.row * tileH + tileH / 2;
+
+        gc.setStroke(Color.RED);       // line color
+        gc.setLineWidth(2);            // line thickness
+        gc.strokeLine(x1, y1, x2, y2);
     }
 
     public Canvas GetCanvas(){
