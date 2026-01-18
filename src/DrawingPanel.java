@@ -3,15 +3,17 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
+import java.util.Map;
+
 public class DrawingPanel extends StackPane {
     private final Canvas canvas;
     private final GraphicsContext gc;
-    private int Size = 10;
+    private int Size = 20;
     Grid grid;
     double tileWidth;
     double tileHeight;
 
-    private PathSearch pathSearch;
+    public PathSearch pathSearch;
 
     public DrawingPanel() {
         canvas = new Canvas();
@@ -27,19 +29,23 @@ public class DrawingPanel extends StackPane {
 
         pathSearch = new PathSearch();
         pathSearch.Initialize(grid);
+        pathSearch.Enter(0, 0, Size - 1, Size - 1);
 
         // Redraw on resize
         canvas.widthProperty().addListener((obs, o, n) -> draw());
         canvas.heightProperty().addListener((obs, o, n) -> draw());
 
-       setupMouseHandlers();
+        setupMouseHandlers();
 
         draw();
     }
 
-    private void draw() {
+    public void draw() {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
         DrawGrid();
+        //drawNeighborLines();
+
     }
 
     private void drawHexagon(double centerX, double centerY, double radius) {
@@ -59,7 +65,7 @@ public class DrawingPanel extends StackPane {
         gc.strokePolygon(xPoints, yPoints, 6);
     }
 
-    private void DrawGrid(){
+    private void DrawGrid() {
         tileWidth = canvas.getWidth() / Size;
         tileHeight = canvas.getHeight() / Size;
 
@@ -72,11 +78,22 @@ public class DrawingPanel extends StackPane {
                 double px = x * tileWidth;
                 double py = y * tileHeight;
 
-                if (!tile.walkable)
-                    gc.setFill(Color.BLUE);
-                else
-                    gc.setFill(Color.WHITE);
+                if (!tile.walkable) {
+                    gc.setFill(Color.DARKRED);
+                } else if (tile.isStart) {
+                    gc.setFill(Color.GREEN);
+                } else if (tile.isGoal) {
+                    gc.setFill(Color.RED);
+                }else if(tile.inFinalPath){
+                    gc.setFill(Color.LIGHTGREEN);
+                } else if(tile.inClosedSet){
+                    gc.setFill(Color.DARKBLUE);
+                } else if (tile.inOpenSet) {
+                    gc.setFill(Color.LIGHTBLUE);
 
+                }else {
+                    gc.setFill(Color.WHITE);
+                }
                 gc.fillRect(px, py, tileWidth, tileHeight);
                 gc.strokeRect(px, py, tileWidth, tileHeight);
             }
@@ -98,7 +115,18 @@ public class DrawingPanel extends StackPane {
         gc.strokeLine(x1, y1, x2, y2);
     }
 
-    public Canvas GetCanvas(){
+    private void drawNeighborLines() {
+        for (Map.Entry<Tile, PathSearch.SearchNode> entry : pathSearch.Nodes.entrySet()) {
+            Tile tile = entry.getKey();
+            PathSearch.SearchNode node = entry.getValue();
+            for (PathSearch.SearchNode neighbor : node.neighbors) {
+                Tile nTile = neighbor.tile;
+                drawLineBetweenTiles(tile, nTile);
+            }
+        }
+    }
+
+    public Canvas GetCanvas() {
         return canvas;
     }
 

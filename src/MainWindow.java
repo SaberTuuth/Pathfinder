@@ -1,15 +1,20 @@
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class MainWindow {
     private final Stage stage;
     private final DrawingPanel drawingPanel;
+    private Timeline searchTimeline;
 
     public MainWindow(Stage stage){
         this.stage = stage;
@@ -19,13 +24,27 @@ public class MainWindow {
 
     private void SetupUI(){
 
+        MenuBar menuBar = new MenuBar();
+
+        Menu fileMenu = new Menu("File");
+        Menu viewMenu = new Menu("View");
+        Menu randomMenu = new Menu("Randomize");
+        menuBar.getMenus().addAll(
+                fileMenu,
+                viewMenu,
+                randomMenu
+        );
+
         Button runBtn = new Button("Run");
+        runBtn.setOnAction(e -> {
+            startSearch();
+        });
         Button resetBtn = new Button("Reset");
 
         ToolBar toolbar = new ToolBar(runBtn, resetBtn);
 
         BorderPane root = new BorderPane();
-        root.setTop(toolbar);
+        root.setTop(new VBox( menuBar, toolbar));
         root.setCenter(drawingPanel);
 
         Scene scene = new Scene(root, 800, 600);
@@ -38,4 +57,23 @@ public class MainWindow {
         stage.show();
     }
 
+    private void startSearch() {
+        if (searchTimeline != null) {
+            searchTimeline.stop();
+        }
+
+        searchTimeline = new Timeline(
+                new KeyFrame(Duration.millis(50), e -> {
+                    boolean running = drawingPanel.pathSearch.UpdateStep();
+                    drawingPanel.draw();
+
+                    if (!running) {
+                        searchTimeline.stop();
+                    }
+                })
+        );
+
+        searchTimeline.setCycleCount(Animation.INDEFINITE);
+        searchTimeline.play();
+    }
 }
