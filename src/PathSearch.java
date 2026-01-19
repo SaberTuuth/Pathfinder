@@ -7,6 +7,11 @@ public class PathSearch {
         SQUARE_EIGHT_DIR
     }
 
+    public enum SearchMethod {
+        BFS,
+        DFS
+    }
+
     public class SearchNode {
         public Tile tile;
         public List<SearchNode> neighbors;
@@ -50,10 +55,13 @@ public class PathSearch {
             {1, 1}
     };
 
+    public Directions DIRS = Directions.SQUARE_FOUR_DIR;
+    public SearchMethod Search = SearchMethod.BFS;
     Grid TileGrid;
     SearchNode StartTile;
     SearchNode GoalTile;
     Queue<PathNode> openQueue = new ArrayDeque<>();
+    Stack<PathNode> openStack = new Stack<>();
     private List<Tile> finalPath = new ArrayList<>();
 
     public PathSearch() {
@@ -84,7 +92,13 @@ public class PathSearch {
                     continue;
                 }
                 SearchNode currentNode = Nodes.get(currentTile);
-                for (int[] dir : DIRS_8) {
+                int[][] neighborDirections;
+                switch (DIRS) {
+                    case SQUARE_FOUR_DIR -> neighborDirections = DIRS_4;
+                    case SQUARE_EIGHT_DIR -> neighborDirections = DIRS_8;
+                    default -> throw new IllegalArgumentException("Unknown directions: " + DIRS);
+                }
+                for (int[] dir : neighborDirections) {
                     int dx = x + dir[0];
                     int dy = y + dir[1];
                     if (dx >= 0 && dx < TileGrid.GetSize() &&
@@ -111,9 +125,22 @@ public class PathSearch {
         PathNode startNode = new PathNode(StartTile, null);
         VisitedNodes.put(StartTile, startNode);
         openQueue.add(startNode);
+        openStack.add(startNode);
     }
 
     public boolean UpdateStep() {
+        switch (Search) {
+            case BFS -> {
+                return BreathFirst();
+            }
+            case DFS -> {
+                return DepthFirst();
+            }
+        }
+        return false;
+    }
+
+    private boolean BreathFirst() {
         if (openQueue.isEmpty()) {
             return false; // finished
         }
@@ -143,6 +170,49 @@ public class PathSearch {
         return true;
     }
 
+    private boolean DepthFirst() {
+        if (openStack.isEmpty()) {
+            return false; // finished, no path
+        }
+
+        // 1. Get next node (LIFO)
+        PathNode currentNode = openStack.pop();
+
+        // 2. Mark closed
+        Tile currentTile = currentNode.searchNode.tile;
+        currentTile.inOpenSet = false;
+        currentTile.inClosedSet = true;
+
+        // 3. Goal check
+        if (currentNode.searchNode == GoalTile) {
+            Exit();
+            return false;
+        }
+
+        // 4. Expand neighbors
+        for (SearchNode neighborNode : currentNode.searchNode.neighbors) {
+
+            // 🚫 Skip walls / blocked tiles
+            if (!neighborNode.tile.walkable) continue;
+
+            // Skip visited / closed
+            if (neighborNode.tile.inClosedSet) continue;
+            if (VisitedNodes.containsKey(neighborNode)) continue;
+
+            // Create next node
+            PathNode nextNode = new PathNode(neighborNode, currentNode);
+
+            // Mark visited immediately
+            VisitedNodes.put(neighborNode, nextNode);
+            neighborNode.tile.inOpenSet = true;
+
+            // DFS behavior: push onto stack
+            openStack.push(nextNode);
+        }
+
+        return true; // continue searching
+    }
+
 
     private void Exit() {
         finalPath.clear();
@@ -162,4 +232,40 @@ public class PathSearch {
         VisitedNodes.clear();
     }
 
+    public void ResetSearch() {
+
+        // Clear open structures
+        if (openQueue != null) openQueue.clear();
+        if (openStack != null) openStack.clear();
+
+        // Clear visited nodes
+        VisitedNodes.clear();
+
+        // Reset tiles
+        for (SearchNode node : Nodes.values()) {
+            Tile tile = node.tile;
+            tile.inOpenSet = false;
+            tile.inClosedSet = false;
+        }
+
+        // Re-add start node
+        PathNode startNode = new PathNode(StartTile, null);
+        VisitedNodes.put(StartTile, startNode);
+
+        if (openQueue != null) {
+            openQueue.add(startNode);   // BFS / Dijkstra / A*
+        }
+        if (openStack != null) {
+            openStack.push(startNode);  // DFS
+        }
+
+        // Optional: clear final path visualization
+        ClearPathVisuals();
+    }
+
+    public void ClearPathVisuals() {
+        for (SearchNode node : Nodes.values()) {
+            node.tile.inFinalPath = false;
+        }
+    }
 }

@@ -8,7 +8,7 @@ import java.util.Map;
 public class DrawingPanel extends StackPane {
     private final Canvas canvas;
     private final GraphicsContext gc;
-    private int Size = 20;
+    public int Size = 20;
     Grid grid;
     double tileWidth;
     double tileHeight;

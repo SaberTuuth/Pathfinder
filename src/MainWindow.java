@@ -2,10 +2,7 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.ToolBar;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -28,11 +25,45 @@ public class MainWindow {
 
         Menu fileMenu = new Menu("File");
         Menu viewMenu = new Menu("View");
-        Menu randomMenu = new Menu("Randomize");
+        Menu gridMenu = new Menu("Grid");
+        MenuItem squareGrid_4_DIRS = new MenuItem("Square Grid 4 Directions");
+        squareGrid_4_DIRS.setOnAction(e ->{
+            drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_FOUR_DIR;
+            drawingPanel.pathSearch.Initialize(drawingPanel.grid);
+            drawingPanel.pathSearch.Enter(0,0,drawingPanel.Size - 1, drawingPanel.Size - 1);
+            ResetGrid();
+        });
+
+        MenuItem squareGrid_8_DIRS = new MenuItem("Square Grid 8 Directions");
+        squareGrid_8_DIRS.setOnAction(e -> {
+            drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_EIGHT_DIR;
+            drawingPanel.pathSearch.Initialize(drawingPanel.grid);
+            drawingPanel.pathSearch.Enter(0,0,drawingPanel.Size - 1, drawingPanel.Size - 1);
+            ResetGrid();
+
+        });
+        gridMenu.getItems().addAll(squareGrid_4_DIRS, squareGrid_8_DIRS);
+
+        Menu searchMenu = new Menu("Search Method");
+        MenuItem breathFirst = new MenuItem("Breath First");
+        breathFirst.setOnAction(e ->{
+            drawingPanel.pathSearch.Search = PathSearch.SearchMethod.BFS;
+            ResetGrid();
+        });
+
+        MenuItem depthFirst = new MenuItem("Depth First");
+        depthFirst.setOnAction(e -> {
+            drawingPanel.pathSearch.Search = PathSearch.SearchMethod.DFS;
+            ResetGrid();
+        });
+
+        searchMenu.getItems().addAll(breathFirst, depthFirst);
+
         menuBar.getMenus().addAll(
                 fileMenu,
                 viewMenu,
-                randomMenu
+                gridMenu,
+                searchMenu
         );
 
         Button runBtn = new Button("Run");
@@ -40,6 +71,9 @@ public class MainWindow {
             startSearch();
         });
         Button resetBtn = new Button("Reset");
+        resetBtn.setOnAction(e -> {
+            ResetGrid();
+        });
 
         ToolBar toolbar = new ToolBar(runBtn, resetBtn);
 
@@ -75,5 +109,18 @@ public class MainWindow {
 
         searchTimeline.setCycleCount(Animation.INDEFINITE);
         searchTimeline.play();
+    }
+
+    private void ResetGrid(){
+        // Stop the running search first
+        if (searchTimeline != null) {
+            searchTimeline.stop();
+        }
+
+        // Reset the search
+        drawingPanel.pathSearch.ResetSearch();
+
+        // Redraw the panel
+        drawingPanel.draw();
     }
 }
