@@ -4,6 +4,7 @@ import javafx.animation.Timeline;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -12,6 +13,7 @@ public class MainWindow {
     private final Stage stage;
     private final DrawingPanel drawingPanel;
     private Timeline searchTimeline;
+    private int stepDelay = 50;
 
     public MainWindow(Stage stage){
         this.stage = stage;
@@ -30,7 +32,7 @@ public class MainWindow {
         squareGrid_4_DIRS.setOnAction(e ->{
             drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_FOUR_DIR;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-            drawingPanel.pathSearch.Enter(0,0,drawingPanel.Size - 1, drawingPanel.Size - 1);
+            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridSize() - 1, drawingPanel.getGridSize() - 1);
             ResetGrid();
         });
 
@@ -38,7 +40,7 @@ public class MainWindow {
         squareGrid_8_DIRS.setOnAction(e -> {
             drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_EIGHT_DIR;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-            drawingPanel.pathSearch.Enter(0,0,drawingPanel.Size - 1, drawingPanel.Size - 1);
+            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridSize() - 1, drawingPanel.getGridSize() - 1);
             ResetGrid();
 
         });
@@ -59,11 +61,20 @@ public class MainWindow {
 
         searchMenu.getItems().addAll(breathFirst, depthFirst);
 
+        Menu settingsMenu = new Menu("Settings");
+        MenuItem openSettingsItem = new MenuItem("Open Settings");
+        openSettingsItem.setOnAction(e -> {
+            Settings settings = new Settings(drawingPanel, this);
+            settings.show();
+        });
+
+        settingsMenu.getItems().add(openSettingsItem);
         menuBar.getMenus().addAll(
                 fileMenu,
                 viewMenu,
                 gridMenu,
-                searchMenu
+                searchMenu,
+                settingsMenu
         );
 
         Button runBtn = new Button("Run");
@@ -80,8 +91,7 @@ public class MainWindow {
         BorderPane root = new BorderPane();
         root.setTop(new VBox( menuBar, toolbar));
         root.setCenter(drawingPanel);
-
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 800, 800);
 
         stage.setScene(scene);
         stage.setTitle("Path Planner");
@@ -97,7 +107,7 @@ public class MainWindow {
         }
 
         searchTimeline = new Timeline(
-                new KeyFrame(Duration.millis(50), e -> {
+                new KeyFrame(Duration.millis(stepDelay), e -> {
                     boolean running = drawingPanel.pathSearch.UpdateStep();
                     drawingPanel.draw();
 
@@ -122,5 +132,19 @@ public class MainWindow {
 
         // Redraw the panel
         drawingPanel.draw();
+    }
+
+    public int getStepDelay() {
+        return stepDelay;
+    }
+
+    public void setStepDelay(int delay) {
+        stepDelay = delay;
+    }
+
+    public void stopSearch() {
+        if (searchTimeline != null) {
+            searchTimeline.stop();
+        }
     }
 }

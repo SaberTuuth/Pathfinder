@@ -156,7 +156,7 @@ public class PathSearch {
             return false;
         }
         for (SearchNode neighborNode : currentNode.searchNode.neighbors) {
-            if (!VisitedNodes.containsKey(neighborNode)) {
+            if (!VisitedNodes.containsKey(neighborNode) && neighborNode.tile.walkable) {
                 // Create new path node
                 PathNode nextNode = new PathNode(neighborNode, currentNode);
 

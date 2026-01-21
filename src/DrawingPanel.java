@@ -12,9 +12,17 @@ public class DrawingPanel extends StackPane {
     Grid grid;
     double tileWidth;
     double tileHeight;
-    double tileSize;
-    double offsetX;
-    double offsetY;
+    GridColors colors = new GridColors();
+
+    public static class GridColors {
+        public Color walkable = Color.WHITE;
+        public Color blocked  = Color.DARKRED;
+        public Color start    = Color.GREEN;
+        public Color goal     = Color.RED;
+        public Color openSet  = Color.LIGHTBLUE;
+        public Color closedSet = Color.DARKBLUE;
+        public Color path     = Color.LIGHTGREEN;
+    }
 
 
     public PathSearch pathSearch;
@@ -80,21 +88,21 @@ public class DrawingPanel extends StackPane {
                 double py = y * tileHeight;
 
                 if (!tile.walkable) {
-                    gc.setFill(Color.DARKRED);
+                    gc.setFill(colors.blocked);
                 } else if (tile.isStart) {
-                    gc.setFill(Color.GREEN);
+                    gc.setFill(colors.start);
                 } else if (tile.isGoal) {
-                    gc.setFill(Color.RED);
-                }else if(tile.inFinalPath){
-                    gc.setFill(Color.LIGHTGREEN);
-                } else if(tile.inClosedSet){
-                    gc.setFill(Color.DARKBLUE);
+                    gc.setFill(colors.goal);
+                } else if (tile.inFinalPath) {
+                    gc.setFill(colors.path);
+                } else if (tile.inClosedSet) {
+                    gc.setFill(colors.closedSet);
                 } else if (tile.inOpenSet) {
-                    gc.setFill(Color.LIGHTBLUE);
-
-                }else {
-                    gc.setFill(Color.WHITE);
+                    gc.setFill(colors.openSet);
+                } else {
+                    gc.setFill(colors.walkable);
                 }
+
                 gc.fillRect(px, py, tileWidth, tileHeight);
                 gc.strokeRect(px, py, tileWidth, tileHeight);
             }
