@@ -6,12 +6,16 @@ import javafx.scene.paint.Color;
 import java.util.Map;
 
 public class DrawingPanel extends StackPane {
-    private final Canvas canvas;
+    public final Canvas canvas;
     private final GraphicsContext gc;
-    public int Size = 20;
+    private int gridSize = 20;
     Grid grid;
     double tileWidth;
     double tileHeight;
+    double tileSize;
+    double offsetX;
+    double offsetY;
+
 
     public PathSearch pathSearch;
 
@@ -19,7 +23,7 @@ public class DrawingPanel extends StackPane {
         canvas = new Canvas();
 
         gc = canvas.getGraphicsContext2D();
-        grid = new Grid(Size);
+        grid = new Grid(gridSize);
         // THIS LINE IS CRITICAL
         getChildren().add(canvas);
 
@@ -29,7 +33,7 @@ public class DrawingPanel extends StackPane {
 
         pathSearch = new PathSearch();
         pathSearch.Initialize(grid);
-        pathSearch.Enter(0, 0, Size - 1, Size - 1);
+        pathSearch.Enter(0, 0, gridSize - 1, gridSize - 1);
 
         // Redraw on resize
         canvas.widthProperty().addListener((obs, o, n) -> draw());
@@ -41,8 +45,8 @@ public class DrawingPanel extends StackPane {
     }
 
     public void draw() {
+        updateLayout();
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
         DrawGrid();
         //drawNeighborLines();
 
@@ -66,11 +70,8 @@ public class DrawingPanel extends StackPane {
     }
 
     private void DrawGrid() {
-        tileWidth = canvas.getWidth() / Size;
-        tileHeight = canvas.getHeight() / Size;
-
+        updateLayout();
         gc.setStroke(Color.BLACK);
-
         for (int x = 0; x < grid.GetSize(); x++) {
             for (int y = 0; y < grid.GetSize(); y++) {
                 Tile tile = grid.GetTile(x, y);
@@ -101,8 +102,8 @@ public class DrawingPanel extends StackPane {
     }
 
     private void drawLineBetweenTiles(Tile a, Tile b) {
-        double tileW = canvas.getWidth() / Size;
-        double tileH = canvas.getHeight() / Size;
+        double tileW = canvas.getWidth() / gridSize;
+        double tileH = canvas.getHeight() / gridSize;
 
         double x1 = a.colum * tileW + tileW / 2;
         double y1 = a.row * tileH + tileH / 2;
@@ -143,4 +144,28 @@ public class DrawingPanel extends StackPane {
             }
         });
     }
+
+    public int getGridSize() {
+        return gridSize;
+    }
+
+    public void setGridSize(int size) {
+        gridSize = size;
+        rebuildGrid();
+    }
+
+    private void rebuildGrid() {
+        grid = new Grid(gridSize);
+        pathSearch.ResetSearch();
+        pathSearch.Initialize(grid);
+        pathSearch.Enter(0, 0, gridSize - 1, gridSize - 1);
+
+        draw();
+    }
+
+    private void updateLayout() {
+        tileWidth = canvas.getWidth() / gridSize;
+        tileHeight = canvas.getHeight() / gridSize;
+    }
+
 }
