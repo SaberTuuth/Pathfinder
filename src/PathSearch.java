@@ -4,7 +4,8 @@ public class PathSearch {
 
     public enum Directions {
         SQUARE_FOUR_DIR,
-        SQUARE_EIGHT_DIR
+        SQUARE_EIGHT_DIR,
+        HEX_SIX_DIR
     }
 
     public enum SearchMethod {
@@ -55,14 +56,34 @@ public class PathSearch {
             {1, 1}
     };
 
-    public Directions DIRS = Directions.SQUARE_FOUR_DIR;
+    private static final int[][] DIRS_6_HEX_ODD = {
+            {1, 0},
+            {1, -1},
+            {0, -1},
+            {-1, 0},
+            {0, 1},
+            {1, 1}
+    };
+
+
+    private static final int[][] DIRS_6_HEX_EVEN = {
+            {1, 0},
+            {0, -1},
+            {-1, -1},
+            {-1, 0},
+            {-1, 1},
+            {0, 1}
+    };
+
+
+    public Directions DIRS = Directions.HEX_SIX_DIR;
     public SearchMethod Search = SearchMethod.BFS;
     Grid TileGrid;
     SearchNode StartTile;
     SearchNode GoalTile;
     Queue<PathNode> openQueue = new ArrayDeque<>();
     Stack<PathNode> openStack = new Stack<>();
-    private List<Tile> finalPath = new ArrayList<>();
+    private final List<Tile> finalPath = new ArrayList<>();
 
     public PathSearch() {
         TileGrid = null;
@@ -75,8 +96,8 @@ public class PathSearch {
     public void Initialize(Grid grid) {
         TileGrid = grid;
 
-        for (int x = 0; x < TileGrid.GetSize(); x++) {
-            for (int y = 0; y < TileGrid.GetSize(); y++) {
+        for (int x = 0; x < TileGrid.GetWidth(); x++) {
+            for (int y = 0; y < TileGrid.GetHeight(); y++) {
                 Tile currentTile = TileGrid.GetTile(x, y);
                 if (currentTile != null) { // TODO: add check for weight later
                     SearchNode searchNode = new SearchNode(currentTile);
@@ -85,8 +106,8 @@ public class PathSearch {
             }
         }
         // calculate directions
-        for (int x = 0; x < TileGrid.GetSize(); x++) {
-            for (int y = 0; y < TileGrid.GetSize(); y++) {
+        for (int x = 0; x < TileGrid.GetWidth(); x++) {
+            for (int y = 0; y < TileGrid.GetHeight(); y++) {
                 Tile currentTile = TileGrid.GetTile(x, y);
                 if (currentTile == null || !Nodes.containsKey(currentTile)) {
                     continue;
@@ -96,13 +117,20 @@ public class PathSearch {
                 switch (DIRS) {
                     case SQUARE_FOUR_DIR -> neighborDirections = DIRS_4;
                     case SQUARE_EIGHT_DIR -> neighborDirections = DIRS_8;
+                    case HEX_SIX_DIR -> {
+                        if (y % 2 == 0) {
+                            neighborDirections = DIRS_6_HEX_EVEN;
+                        } else {
+                            neighborDirections = DIRS_6_HEX_ODD;
+                        }
+                    }
                     default -> throw new IllegalArgumentException("Unknown directions: " + DIRS);
                 }
                 for (int[] dir : neighborDirections) {
                     int dx = x + dir[0];
                     int dy = y + dir[1];
-                    if (dx >= 0 && dx < TileGrid.GetSize() &&
-                            dy >= 0 && dy < TileGrid.GetSize()) {
+                    if (dx >= 0 && dx < TileGrid.GetWidth() &&
+                            dy >= 0 && dy < TileGrid.GetHeight()) {
                         Tile neighborTile = TileGrid.GetTile(dx, dy);
                         if (neighborTile != null && Nodes.containsKey(neighborTile)) {// TODO: add check for weights later
                             SearchNode neighborNode = Nodes.get(neighborTile);

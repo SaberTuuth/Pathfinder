@@ -1,20 +1,21 @@
 public class Grid {
 
-    private int size;
+    private int Width;
+    private int Height;
     private final Tile[][] tiles;
 
-    public Grid(int Size) {
-        size = Size;
-        tiles = new Tile[size][size];
-        for(int x = 0; x < size; x++){
-            for(int y = 0; y < size; y++) {
+    public Grid(int width, int height) {
+        SetSize(width, height);
+        tiles = new Tile[Width][Height];
+        for(int x = 0; x < Width; x++){
+            for(int y = 0; y < Height; y++) {
                 tiles[x][y] = new Tile(x, y);
             }
         }
     }
 
     public Tile GetTile(int x, int y){
-        if((0 <= x) && (0 <= y) && (x < size) && (y < size)){
+        if((0 <= x) && (0 <= y) && (x < Width) && (y < Height)){
             return tiles[x][y];
         }
         else{
@@ -22,12 +23,17 @@ public class Grid {
         }
     }
 
-    public int GetSize(){
-        return size;
+    public int GetWidth(){
+        return Width;
     }
 
-    public void SetSize(int Size){
-        size = Size;
+    public int GetHeight(){
+        return Height;
+    }
+
+    public void SetSize(int width, int height){
+        Width = width;
+        Height = height;
     }
 }
 

@@ -23,9 +23,13 @@ public class Settings {
 
         // ---------------- GRID SIZE ----------------
         Label gridLabel = new Label("Grid Size:");
-        Spinner<Integer> gridSizeSpinner =
-                new Spinner<>(5, 100, drawingPanel.getGridSize());
-        gridSizeSpinner.setEditable(true);
+        Spinner<Integer> gridWidthSpinner =
+                new Spinner<>(5, 100, drawingPanel.getGridWidth());
+        gridWidthSpinner.setEditable(true);
+
+        Spinner<Integer> gridHeightSpinner =
+                new Spinner<>(5, 100, drawingPanel.getGridHeight());
+        gridHeightSpinner.setEditable(true);
 
         // ---------------- SPEED ----------------
         Label speedLabel = new Label("Iteration Speed (ms):");
@@ -50,7 +54,7 @@ public class Settings {
             mainWindow.stopSearch();
 
             // Apply grid size
-            drawingPanel.setGridSize(gridSizeSpinner.getValue());
+            drawingPanel.setGridSize(gridWidthSpinner.getValue(), gridHeightSpinner.getValue());
 
             // Apply speed
             mainWindow.setStepDelay((int) speedSlider.getValue());
@@ -72,7 +76,7 @@ public class Settings {
 
         // ---------------- LAYOUT ----------------
         grid.add(gridLabel, 0, 0);
-        grid.add(gridSizeSpinner, 1, 0);
+        grid.add(gridWidthSpinner, 1, 0);
 
         grid.add(speedLabel, 0, 1);
         grid.add(speedSlider, 1, 1);
@@ -100,6 +104,9 @@ public class Settings {
 
         grid.add(applyBtn, 0, 9);
         grid.add(closeBtn, 1, 9);
+
+        grid.add(new Label("Grid Height"), 0, 10);
+        grid.add(gridHeightSpinner, 1, 10);
 
         Scene scene = new Scene(grid, 400, 400);
         stage.setScene(scene);

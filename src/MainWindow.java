@@ -31,16 +31,18 @@ public class MainWindow {
         MenuItem squareGrid_4_DIRS = new MenuItem("Square Grid 4 Directions");
         squareGrid_4_DIRS.setOnAction(e ->{
             drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_FOUR_DIR;
+            drawingPanel.tileShape = DrawingPanel.TileShape.SQUARE;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridSize() - 1, drawingPanel.getGridSize() - 1);
+            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
             ResetGrid();
         });
 
         MenuItem squareGrid_8_DIRS = new MenuItem("Square Grid 8 Directions");
         squareGrid_8_DIRS.setOnAction(e -> {
             drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_EIGHT_DIR;
+            drawingPanel.tileShape = DrawingPanel.TileShape.SQUARE;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridSize() - 1, drawingPanel.getGridSize() - 1);
+            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
             ResetGrid();
 
         });
@@ -91,7 +93,7 @@ public class MainWindow {
         BorderPane root = new BorderPane();
         root.setTop(new VBox( menuBar, toolbar));
         root.setCenter(drawingPanel);
-        Scene scene = new Scene(root, 800, 800);
+        Scene scene = new Scene(root, 1200, 800);
 
         stage.setScene(scene);
         stage.setTitle("Path Planner");
