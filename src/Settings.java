@@ -22,7 +22,7 @@ public class Settings {
         grid.setVgap(10);
 
         // ---------------- GRID SIZE ----------------
-        Label gridLabel = new Label("Grid Size:");
+        Label gridLabel = new Label("Grid Width:");
         Spinner<Integer> gridWidthSpinner =
                 new Spinner<>(5, 100, drawingPanel.getGridWidth());
         gridWidthSpinner.setEditable(true);
@@ -78,35 +78,37 @@ public class Settings {
         grid.add(gridLabel, 0, 0);
         grid.add(gridWidthSpinner, 1, 0);
 
-        grid.add(speedLabel, 0, 1);
-        grid.add(speedSlider, 1, 1);
+        grid.add(new Label("Grid Height"), 0, 1);
+        grid.add(gridHeightSpinner, 1, 1);
 
-        grid.add(new Label("Walkable Tile:"), 0, 2);
-        grid.add(walkablePicker, 1, 2);
+        grid.add(speedLabel, 0, 2);
+        grid.add(speedSlider, 1, 2);
 
-        grid.add(new Label("Blocked Tile:"), 0, 3);
-        grid.add(blockedPicker, 1, 3);
+        grid.add(new Label("Walkable Tile:"), 0, 3);
+        grid.add(walkablePicker, 1, 3);
 
-        grid.add(new Label("Open Set:"), 0, 4);
-        grid.add(openPicker, 1, 4);
+        grid.add(new Label("Blocked Tile:"), 0, 4);
+        grid.add(blockedPicker, 1, 4);
 
-        grid.add(new Label("Closed Set:"), 0, 5);
-        grid.add(closedPicker, 1, 5);
+        grid.add(new Label("Open Set:"), 0, 5);
+        grid.add(openPicker, 1, 5);
 
-        grid.add(new Label("Final Path:"), 0, 6);
-        grid.add(pathPicker, 1, 6);
+        grid.add(new Label("Closed Set:"), 0, 6);
+        grid.add(closedPicker, 1, 6);
 
-        grid.add(new Label("Start Tile:"), 0, 7);
-        grid.add(startPicker, 1, 7);
+        grid.add(new Label("Final Path:"), 0, 7);
+        grid.add(pathPicker, 1, 7);
 
-        grid.add(new Label("Goal Tile:"), 0, 8);
-        grid.add(goalPicker, 1, 8);
+        grid.add(new Label("Start Tile:"), 0, 8);
+        grid.add(startPicker, 1, 8);
 
-        grid.add(applyBtn, 0, 9);
-        grid.add(closeBtn, 1, 9);
+        grid.add(new Label("Goal Tile:"), 0, 9);
+        grid.add(goalPicker, 1, 9);
 
-        grid.add(new Label("Grid Height"), 0, 10);
-        grid.add(gridHeightSpinner, 1, 10);
+        grid.add(applyBtn, 0, 10);
+        grid.add(closeBtn, 1, 10);
+
+
 
         Scene scene = new Scene(grid, 400, 400);
         stage.setScene(scene);

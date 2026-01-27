@@ -35,20 +35,16 @@ public class DrawingPanel extends StackPane {
     public PathSearch pathSearch;
 
     private double hexRadius;
-    private double hexWidth;
     private double hexHeight;
     double gridOffsetX = 0;
     double gridOffsetY = 0;
-    private double gridPixelWidth;
-    private double gridPixelHeight;
-
 
     public DrawingPanel() {
         canvas = new Canvas();
 
         gc = canvas.getGraphicsContext2D();
         grid = new Grid(gridWidth, gridHeight);
-        // THIS LINE IS CRITICAL
+
         getChildren().add(canvas);
 
         // Resize canvas with panel
@@ -75,7 +71,7 @@ public class DrawingPanel extends StackPane {
         updateLayout();
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         DrawGrid();
-        drawNeighborLines();
+        //drawNeighborLines();
     }
 
     private void drawHexagon(double centerX, double centerY, double radius) {
@@ -240,12 +236,10 @@ public class DrawingPanel extends StackPane {
                 canvas.getHeight() / (gridHeight * Math.sqrt(3));
 
         hexRadius = Math.min(rFromWidth, rFromHeight);
-        hexWidth = hexRadius * 2 * .75;
         hexHeight = Math.sqrt(3) * hexRadius;
 
         // Total grid pixel size
         double gridPixelWidth = (gridWidth - 1) * 1.5 * hexRadius + 2 * hexRadius;
-
         double gridPixelHeight = gridHeight * hexHeight + hexHeight / 2;
 
         // Center grid in canvas
