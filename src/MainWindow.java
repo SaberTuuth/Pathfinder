@@ -44,9 +44,26 @@ public class MainWindow {
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
             drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
             ResetGrid();
-
         });
-        gridMenu.getItems().addAll(squareGrid_4_DIRS, squareGrid_8_DIRS);
+
+        MenuItem hexGrid_6_DIRS = new MenuItem("Hexagon Grid 6 Directions");
+        hexGrid_6_DIRS.setOnAction(e -> {
+            drawingPanel.pathSearch.DIRS = PathSearch.Directions.HEX_SIX_DIR;
+            drawingPanel.tileShape = DrawingPanel.TileShape.HEXAGON;
+            drawingPanel.pathSearch.Initialize(drawingPanel.grid);
+            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
+            ResetGrid();
+        });
+
+        MenuItem triGrid_6_DIRS = new MenuItem("Triangle Grid 6 Directions");
+        triGrid_6_DIRS.setOnAction(e -> {
+            drawingPanel.pathSearch.DIRS = PathSearch.Directions.TRIANGLE_SIX_DIR;
+            drawingPanel.tileShape = DrawingPanel.TileShape.TRIANGLE;
+            drawingPanel.pathSearch.Initialize(drawingPanel.grid);
+            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
+            ResetGrid();
+        });
+        gridMenu.getItems().addAll(squareGrid_4_DIRS, squareGrid_8_DIRS, hexGrid_6_DIRS, triGrid_6_DIRS);
 
         Menu searchMenu = new Menu("Search Method");
         MenuItem breathFirst = new MenuItem("Breath First");

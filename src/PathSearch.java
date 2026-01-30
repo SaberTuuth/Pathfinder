@@ -5,7 +5,8 @@ public class PathSearch {
     public enum Directions {
         SQUARE_FOUR_DIR,
         SQUARE_EIGHT_DIR,
-        HEX_SIX_DIR
+        HEX_SIX_DIR,
+        TRIANGLE_SIX_DIR
     }
 
     public enum SearchMethod {
@@ -75,8 +76,38 @@ public class PathSearch {
             {0, 1}
     };
 
+    private static final int[][] DIRS_TRI_EVEN = {
+            {0, -1},//up
+            {1, -1}, // up right
+            {-1, -1},// up left
+            {0, 1}, // down
+            {1, 0}, // right
+            {-1, 0}, //left
+            {1, 1}, // down right
+            {-1, 1},
+            {2, 0},
+            {-2, 0},
+            {-2, 1},
+            {2, 1}
+    };
 
-    public Directions DIRS = Directions.HEX_SIX_DIR;
+    private static final int[][] DIRS_TRI_ODD = {
+            {0, 1},
+            {1, 0},
+            {-1, 0},
+            {1, -1},
+            {-1, -1},
+            {2, 0},
+            {-2, 0},
+            {1, 1},
+            {-1, 1},
+            {0, -1},
+            {2, -1},
+            {-2, -1}
+    };
+
+
+    public Directions DIRS = Directions.TRIANGLE_SIX_DIR;
     public SearchMethod Search = SearchMethod.BFS;
     Grid TileGrid;
     SearchNode StartTile;
@@ -99,6 +130,10 @@ public class PathSearch {
         for (int x = 0; x < TileGrid.GetWidth(); x++) {
             for (int y = 0; y < TileGrid.GetHeight(); y++) {
                 Tile currentTile = TileGrid.GetTile(x, y);
+                currentTile.row = x;
+                currentTile.x = x;
+                currentTile.y = y;
+                currentTile.colum = y;
                 if (currentTile != null) { // TODO: add check for weight later
                     SearchNode searchNode = new SearchNode(currentTile);
                     Nodes.put(currentTile, searchNode);
@@ -124,6 +159,13 @@ public class PathSearch {
                             neighborDirections = DIRS_6_HEX_ODD;
                         }
                     }
+                    case TRIANGLE_SIX_DIR -> {
+                        if ((x + y) % 2 == 0) {
+                            neighborDirections = DIRS_TRI_EVEN;
+                        } else {
+                            neighborDirections = DIRS_TRI_ODD;
+                        }
+                    }
                     default -> throw new IllegalArgumentException("Unknown directions: " + DIRS);
                 }
                 for (int[] dir : neighborDirections) {
@@ -132,7 +174,7 @@ public class PathSearch {
                     if (dx >= 0 && dx < TileGrid.GetWidth() &&
                             dy >= 0 && dy < TileGrid.GetHeight()) {
                         Tile neighborTile = TileGrid.GetTile(dx, dy);
-                        if (neighborTile != null && Nodes.containsKey(neighborTile)) {// TODO: add check for weights later
+                        if (neighborTile != null && neighborTile.walkable && Nodes.containsKey(neighborTile)) {// TODO: add check for weights later
                             SearchNode neighborNode = Nodes.get(neighborTile);
                             currentNode.neighbors.add(neighborNode);
                         }
