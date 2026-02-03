@@ -38,7 +38,7 @@ public class Settings {
         speedSlider.setShowTickMarks(true);
 
         // --- Buttons ---
-        ColorPicker walkablePicker = new ColorPicker(drawingPanel.colors.walkable);
+        ColorPicker walkablePicker = new ColorPicker(drawingPanel.colors.weighted);
         ColorPicker blockedPicker  = new ColorPicker(drawingPanel.colors.blocked);
         ColorPicker openPicker     = new ColorPicker(drawingPanel.colors.openSet);
         ColorPicker closedPicker   = new ColorPicker(drawingPanel.colors.closedSet);
@@ -60,7 +60,7 @@ public class Settings {
             mainWindow.setStepDelay((int) speedSlider.getValue());
 
             // Apply colors
-            drawingPanel.colors.walkable = walkablePicker.getValue();
+            drawingPanel.colors.weighted = walkablePicker.getValue();
             drawingPanel.colors.blocked  = blockedPicker.getValue();
             drawingPanel.colors.openSet  = openPicker.getValue();
             drawingPanel.colors.closedSet = closedPicker.getValue();
@@ -107,8 +107,6 @@ public class Settings {
 
         grid.add(applyBtn, 0, 10);
         grid.add(closeBtn, 1, 10);
-
-
 
         Scene scene = new Scene(grid, 400, 400);
         stage.setScene(scene);

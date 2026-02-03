@@ -4,10 +4,12 @@ import javafx.animation.Timeline;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.*;
 
 public class MainWindow {
     private final Stage stage;
@@ -15,25 +17,36 @@ public class MainWindow {
     private Timeline searchTimeline;
     private int stepDelay = 50;
 
-    public MainWindow(Stage stage){
+    public MainWindow(Stage stage) {
         this.stage = stage;
         this.drawingPanel = new DrawingPanel();
         SetupUI();
     }
 
-    private void SetupUI(){
+    private void SetupUI() {
 
         MenuBar menuBar = new MenuBar();
 
         Menu fileMenu = new Menu("File");
+
+        MenuItem loadMap = new MenuItem("Load Map");
+        loadMap.setOnAction(e -> {
+            String filePath = "map1.txt";
+           File file = new File(filePath);
+           Grid newGrid = MapIO.load(file);
+           drawingPanel.grid = newGrid;
+
+        });
+        fileMenu.getItems().addAll(loadMap);
+
         Menu viewMenu = new Menu("View");
         Menu gridMenu = new Menu("Grid");
         MenuItem squareGrid_4_DIRS = new MenuItem("Square Grid 4 Directions");
-        squareGrid_4_DIRS.setOnAction(e ->{
+        squareGrid_4_DIRS.setOnAction(e -> {
             drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_FOUR_DIR;
             drawingPanel.tileShape = DrawingPanel.TileShape.SQUARE;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
+            drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
             ResetGrid();
         });
 
@@ -42,7 +55,7 @@ public class MainWindow {
             drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_EIGHT_DIR;
             drawingPanel.tileShape = DrawingPanel.TileShape.SQUARE;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
+            drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
             ResetGrid();
         });
 
@@ -51,23 +64,23 @@ public class MainWindow {
             drawingPanel.pathSearch.DIRS = PathSearch.Directions.HEX_SIX_DIR;
             drawingPanel.tileShape = DrawingPanel.TileShape.HEXAGON;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
+            drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
             ResetGrid();
         });
 
-        MenuItem triGrid_6_DIRS = new MenuItem("Triangle Grid 6 Directions");
+        MenuItem triGrid_6_DIRS = new MenuItem("Triangle Grid 12 Directions");
         triGrid_6_DIRS.setOnAction(e -> {
-            drawingPanel.pathSearch.DIRS = PathSearch.Directions.TRIANGLE_SIX_DIR;
+            drawingPanel.pathSearch.DIRS = PathSearch.Directions.TRIANGLE_TWELVE_DIR;
             drawingPanel.tileShape = DrawingPanel.TileShape.TRIANGLE;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-            drawingPanel.pathSearch.Enter(0,0,drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
+            drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
             ResetGrid();
         });
         gridMenu.getItems().addAll(squareGrid_4_DIRS, squareGrid_8_DIRS, hexGrid_6_DIRS, triGrid_6_DIRS);
 
         Menu searchMenu = new Menu("Search Method");
         MenuItem breathFirst = new MenuItem("Breath First");
-        breathFirst.setOnAction(e ->{
+        breathFirst.setOnAction(e -> {
             drawingPanel.pathSearch.Search = PathSearch.SearchMethod.BFS;
             ResetGrid();
         });
@@ -100,15 +113,22 @@ public class MainWindow {
         runBtn.setOnAction(e -> {
             startSearch();
         });
+
         Button resetBtn = new Button("Reset");
         resetBtn.setOnAction(e -> {
             ResetGrid();
         });
 
-        ToolBar toolbar = new ToolBar(runBtn, resetBtn);
+        Button showNeighbors = new Button("Show Neighbors");
+        showNeighbors.setOnAction(e -> {
+            drawingPanel.isShowingNeighbors = !drawingPanel.isShowingNeighbors;
+            drawingPanel.draw();
+        });
+
+        ToolBar toolbar = new ToolBar(runBtn, resetBtn, showNeighbors);
 
         BorderPane root = new BorderPane();
-        root.setTop(new VBox( menuBar, toolbar));
+        root.setTop(new VBox(menuBar, toolbar));
         root.setCenter(drawingPanel);
         Scene scene = new Scene(root, 1200, 800);
 
@@ -140,7 +160,7 @@ public class MainWindow {
         searchTimeline.play();
     }
 
-    private void ResetGrid(){
+    private void ResetGrid() {
         // Stop the running search first
         if (searchTimeline != null) {
             searchTimeline.stop();

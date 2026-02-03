@@ -6,7 +6,7 @@ public class PathSearch {
         SQUARE_FOUR_DIR,
         SQUARE_EIGHT_DIR,
         HEX_SIX_DIR,
-        TRIANGLE_SIX_DIR
+        TRIANGLE_TWELVE_DIR
     }
 
     public enum SearchMethod {
@@ -57,23 +57,44 @@ public class PathSearch {
             {1, 1}
     };
 
-    private static final int[][] DIRS_6_HEX_ODD = {
-            {1, 0},
-            {1, -1},
+    public final int[][] DIRS_HEX_EVEN_COL_ODD_ROW = {
             {0, -1},
-            {-1, 0},
             {0, 1},
-            {1, 1}
+            {1, 0},
+            {-1, 0},
+            {1, 1},
+            {-1, 1}
     };
 
 
-    private static final int[][] DIRS_6_HEX_EVEN = {
-            {1, 0},
+    public final int[][] DIRS_HEX_EVEN_COL_EVEN_ROW = {
             {0, -1},
-            {-1, -1},
+            {0, 1},
+            {1, 0},
             {-1, 0},
+            {1, -1},
+            {-1, -1}
+
+    };
+
+    public final int[][] DIRS_HEX_ODD_COL_EVEN_ROW = {
+            {0, -1},
+            {0, 1},
+            {1, 0},
+            {-1, 0},
+            {1, -1},
+            {-1, -1}
+
+    };
+
+    public final int[][] DIRS_HEX_ODD_COL_ODD_ROW = {
+            {0, -1},
+            {0, 1},
+            {1, 0},
+            {-1, 0},
+            {1, 1},
             {-1, 1},
-            {0, 1}
+
     };
 
     private static final int[][] DIRS_TRI_EVEN = {
@@ -107,7 +128,17 @@ public class PathSearch {
     };
 
 
-    public Directions DIRS = Directions.TRIANGLE_SIX_DIR;
+    // Axial directions for pointy-top hex grid
+    private static final int[][] AXIAL_DIRS = {
+            {+1,  0},
+            {+1, -1},
+            { 0, -1},
+            {-1,  0},
+            {-1, +1},
+            { 0, +1}
+    };
+
+    public Directions DIRS = Directions.SQUARE_FOUR_DIR;
     public SearchMethod Search = SearchMethod.BFS;
     Grid TileGrid;
     SearchNode StartTile;
@@ -131,10 +162,8 @@ public class PathSearch {
             for (int y = 0; y < TileGrid.GetHeight(); y++) {
                 Tile currentTile = TileGrid.GetTile(x, y);
                 currentTile.row = x;
-                currentTile.x = x;
-                currentTile.y = y;
                 currentTile.colum = y;
-                if (currentTile != null) { // TODO: add check for weight later
+                if (currentTile != null && currentTile.weight > 0) { // TODO: add check for weight later
                     SearchNode searchNode = new SearchNode(currentTile);
                     Nodes.put(currentTile, searchNode);
                 }
@@ -153,13 +182,36 @@ public class PathSearch {
                     case SQUARE_FOUR_DIR -> neighborDirections = DIRS_4;
                     case SQUARE_EIGHT_DIR -> neighborDirections = DIRS_8;
                     case HEX_SIX_DIR -> {
-                        if (y % 2 == 0) {
-                            neighborDirections = DIRS_6_HEX_EVEN;
-                        } else {
-                            neighborDirections = DIRS_6_HEX_ODD;
+                        // Convert offset (x,y) → axial (q,r)
+                        int q = x;
+                        int r = y - ((x - (x & 1)) / 2);
+
+                        for (int[] d : AXIAL_DIRS) {
+                            int nq = q + d[0];
+                            int nr = r + d[1];
+
+                            // Convert axial → offset
+                            int dx = nq;
+                            int dy = nr + ((nq - (nq & 1)) / 2);
+
+                            if (dx >= 0 && dx < TileGrid.GetWidth() &&
+                                    dy >= 0 && dy < TileGrid.GetHeight()) {
+
+                                Tile neighborTile = TileGrid.GetTile(dx, dy);
+
+                                if (neighborTile != null &&
+                                        neighborTile.walkable &&
+                                        Nodes.containsKey(neighborTile) &&
+                                        neighborTile.weight > 0 &&
+                                        !neighborTile.blocked) {
+
+                                    currentNode.neighbors.add(Nodes.get(neighborTile));
+                                }
+                            }
                         }
+                        continue;
                     }
-                    case TRIANGLE_SIX_DIR -> {
+                    case TRIANGLE_TWELVE_DIR -> {
                         if ((x + y) % 2 == 0) {
                             neighborDirections = DIRS_TRI_EVEN;
                         } else {
@@ -174,7 +226,7 @@ public class PathSearch {
                     if (dx >= 0 && dx < TileGrid.GetWidth() &&
                             dy >= 0 && dy < TileGrid.GetHeight()) {
                         Tile neighborTile = TileGrid.GetTile(dx, dy);
-                        if (neighborTile != null && neighborTile.walkable && Nodes.containsKey(neighborTile)) {// TODO: add check for weights later
+                        if (neighborTile != null && neighborTile.walkable && Nodes.containsKey(neighborTile) && neighborTile.weight > 0 && !neighborTile.blocked) {// TODO: add check for weights later
                             SearchNode neighborNode = Nodes.get(neighborTile);
                             currentNode.neighbors.add(neighborNode);
                         }
@@ -215,28 +267,28 @@ public class PathSearch {
             return false; // finished
         }
         PathNode currentNode = openQueue.poll();
-
-        // Move current node to CLOSED set
         Tile currentTile = currentNode.searchNode.tile;
-        currentTile.inOpenSet = false;
-        currentTile.inClosedSet = true;
 
         if (currentNode.searchNode == GoalTile) {
             Exit();
             return false;
         }
         for (SearchNode neighborNode : currentNode.searchNode.neighbors) {
-            if (!VisitedNodes.containsKey(neighborNode) && neighborNode.tile.walkable) {
-                // Create new path node
-                PathNode nextNode = new PathNode(neighborNode, currentNode);
+            if (!neighborNode.tile.walkable) continue;
+            if (neighborNode.tile.inClosedSet) continue;
+            if (VisitedNodes.containsKey(neighborNode)) continue;
+            // Create new path node
+            PathNode nextNode = new PathNode(neighborNode, currentNode);
 
-                // Mark visited immediately
-                VisitedNodes.put(neighborNode, nextNode);
-                neighborNode.tile.inOpenSet = true;
+            VisitedNodes.put(neighborNode, nextNode);
+            nextNode.parent = currentNode;
+            neighborNode.tile.inOpenSet = true;
 
-                openQueue.add(nextNode);
-            }
+            openQueue.add(nextNode);
+
         }
+        currentTile.inOpenSet = false;
+        currentTile.inClosedSet = true;
         return true;
     }
 
@@ -300,6 +352,15 @@ public class PathSearch {
 
     private void Shutdown() {
         VisitedNodes.clear();
+        openQueue.clear();
+        openStack.clear();
+
+        for (SearchNode node : Nodes.values()) {
+            Tile t = node.tile;
+            t.inOpenSet = false;
+            t.inClosedSet = false;
+            t.inFinalPath = false;
+        }
     }
 
     public void ResetSearch() {

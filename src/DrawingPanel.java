@@ -1,8 +1,11 @@
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+
 import java.util.Map;
+
 import static java.lang.Math.sqrt;
 
 public class DrawingPanel extends StackPane {
@@ -14,7 +17,7 @@ public class DrawingPanel extends StackPane {
     }
 
     public static class GridColors {
-        public Color walkable = Color.WHITE;
+        public Color weighted;
         public Color blocked = Color.DARKRED;
         public Color start = Color.GREEN;
         public Color goal = Color.RED;
@@ -31,8 +34,9 @@ public class DrawingPanel extends StackPane {
     double tileWidth;
     double tileHeight;
     GridColors colors = new GridColors();
-    public TileShape tileShape = TileShape.TRIANGLE;
+    public TileShape tileShape = TileShape.SQUARE;
     public PathSearch pathSearch;
+    public boolean isShowingNeighbors = false;
 
     private double hexRadius;
     private double hexHeight;
@@ -75,8 +79,12 @@ public class DrawingPanel extends StackPane {
     public void draw() {
         updateLayout();
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        gc.setFill(Color.DARKGRAY);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         DrawGrid();
-        drawNeighborLines();
+        if (isShowingNeighbors) {
+            drawNeighborLines();
+        }
     }
 
     private void drawHexagon(double centerX, double centerY, double radius) {
@@ -209,9 +217,12 @@ public class DrawingPanel extends StackPane {
         gc.strokeLine(x1, y1, x2, y2);
     }
 
-    private void drawNeighborLines() {
+    public void drawNeighborLines() {
         for (Map.Entry<Tile, PathSearch.SearchNode> entry : pathSearch.Nodes.entrySet()) {
             Tile tile = entry.getKey();
+            if(tile.blocked){
+                continue;
+            }
             PathSearch.SearchNode node = entry.getValue();
             for (PathSearch.SearchNode neighbor : node.neighbors) {
                 Tile nTile = neighbor.tile;
@@ -236,15 +247,50 @@ public class DrawingPanel extends StackPane {
                     int y = (int) (my / tileHeight);
                     tile = grid.GetTile(x, y);
                 }
-                case HEXAGON -> tile = getTileAtHex(mx, my);
+                case HEXAGON -> {
+                    tile = getTileAtHex(mx, my);
+                    if (tile == null) return;
+
+                    int col = tile.row;
+                    int row = tile.colum;
+
+                    int[][] neighbors;
+                    if(row % 2 == 0) {
+                        neighbors = (col % 2 == 0)
+                                ? pathSearch.DIRS_HEX_EVEN_COL_EVEN_ROW
+                                : pathSearch.DIRS_HEX_EVEN_COL_ODD_ROW;
+                    }else{
+                        neighbors = (col % 2 == 0)
+                                ? pathSearch.DIRS_HEX_ODD_COL_EVEN_ROW
+                                : pathSearch.DIRS_HEX_ODD_COL_ODD_ROW;
+                    }
+
+                    for (int[] offset : neighbors) {
+                        int nCol = col + offset[0];
+                        int nRow = row + offset[1];
+
+                        Tile neighbor = grid.GetTile(nCol, nRow);
+                        if (neighbor != null) {
+                            neighbor.walkable = !neighbor.walkable;
+                        }
+                    }
+                }
                 case TRIANGLE -> tile = getTileAtTriangle(mx, my);
-                default -> { }
+                default -> {
+                }
             }
 
-            if (tile != null) {
+            if (tile != null && e.getButton() == MouseButton.PRIMARY) {
                 tile.walkable = !tile.walkable;
-                draw();
+            } else if (tile != null && e.getButton() == MouseButton.SECONDARY) {
+                tile.weight++;
+                if (tile.weight > 10) {
+                    tile.weight = 1;
+                }
             }
+            System.out.println(tile.row + ' ' + tile.colum);
+            draw();
+
         });
     }
 
@@ -300,13 +346,19 @@ public class DrawingPanel extends StackPane {
         double[] x = new double[3];
         double[] y = new double[3];
         if (pointingUp) {
-            x[0] = cx;               y[0] = cy - h / 2;
-            x[1] = cx - triangleSide / 2;  y[1] = cy + h / 2;
-            x[2] = cx + triangleSide / 2;  y[2] = cy + h / 2;
+            x[0] = cx;
+            y[0] = cy - h / 2;
+            x[1] = cx - triangleSide / 2;
+            y[1] = cy + h / 2;
+            x[2] = cx + triangleSide / 2;
+            y[2] = cy + h / 2;
         } else {
-            x[0] = cx;               y[0] = cy + h / 2;
-            x[1] = cx - triangleSide / 2;  y[1] = cy - h / 2;
-            x[2] = cx + triangleSide / 2;  y[2] = cy - h / 2;
+            x[0] = cx;
+            y[0] = cy + h / 2;
+            x[1] = cx - triangleSide / 2;
+            y[1] = cy - h / 2;
+            x[2] = cx + triangleSide / 2;
+            y[2] = cy - h / 2;
         }
         return pointInPolygon(px, py, x, y, 3);
     }
@@ -408,8 +460,12 @@ public class DrawingPanel extends StackPane {
             gc.setFill(colors.closedSet);
         } else if (tile.inOpenSet) {
             gc.setFill(colors.openSet);
+        } else if (tile.blocked) {
+            gc.setFill(Color.BLACK);
         } else {
-            gc.setFill(colors.walkable);
+            double t = (tile.weight - 1) / 9.0; // normalize 1–10
+            colors.weighted = Color.gray(1.0 - t);
+            gc.setFill(colors.weighted);
         }
     }
 }
