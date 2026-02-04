@@ -93,7 +93,13 @@ public class MainWindow {
             ResetGrid();
         });
 
-        searchMenu.getItems().addAll(breathFirst, depthFirst);
+        MenuItem greedy = new MenuItem("Greedy Best First");
+        greedy.setOnAction(e -> {
+            drawingPanel.pathSearch.Search = PathSearch.SearchMethod.GREEDY;
+            ResetGrid();
+        });
+
+        searchMenu.getItems().addAll(breathFirst, depthFirst, greedy);
 
         Menu settingsMenu = new Menu("Settings");
         MenuItem openSettingsItem = new MenuItem("Open Settings");
@@ -127,7 +133,9 @@ public class MainWindow {
             drawingPanel.draw();
         });
 
-        ToolBar toolbar = new ToolBar(runBtn, resetBtn, showNeighbors);
+        Button startTileBtn = new Button("Start Tile");
+
+        ToolBar toolbar = new ToolBar(runBtn, resetBtn, showNeighbors, startTileBtn);
 
         BorderPane root = new BorderPane();
         root.setTop(new VBox(menuBar, toolbar));
