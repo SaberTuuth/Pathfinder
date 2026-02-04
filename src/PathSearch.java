@@ -57,46 +57,6 @@ public class PathSearch {
             {1, 1}
     };
 
-    public final int[][] DIRS_HEX_EVEN_COL_ODD_ROW = {
-            {0, -1},
-            {0, 1},
-            {1, 0},
-            {-1, 0},
-            {1, 1},
-            {-1, 1}
-    };
-
-
-    public final int[][] DIRS_HEX_EVEN_COL_EVEN_ROW = {
-            {0, -1},
-            {0, 1},
-            {1, 0},
-            {-1, 0},
-            {1, -1},
-            {-1, -1}
-
-    };
-
-    public final int[][] DIRS_HEX_ODD_COL_EVEN_ROW = {
-            {0, -1},
-            {0, 1},
-            {1, 0},
-            {-1, 0},
-            {1, -1},
-            {-1, -1}
-
-    };
-
-    public final int[][] DIRS_HEX_ODD_COL_ODD_ROW = {
-            {0, -1},
-            {0, 1},
-            {1, 0},
-            {-1, 0},
-            {1, 1},
-            {-1, 1},
-
-    };
-
     private static final int[][] DIRS_TRI_EVEN = {
             {0, -1},//up
             {1, -1}, // up right
@@ -129,13 +89,13 @@ public class PathSearch {
 
 
     // Axial directions for pointy-top hex grid
-    private static final int[][] AXIAL_DIRS = {
-            {+1,  0},
+    static final int[][] AXIAL_DIRS = {
+            {+1, 0},
             {+1, -1},
-            { 0, -1},
-            {-1,  0},
+            {0, -1},
+            {-1, 0},
             {-1, +1},
-            { 0, +1}
+            {0, +1}
     };
 
     public Directions DIRS = Directions.SQUARE_FOUR_DIR;

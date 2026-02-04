@@ -35,7 +35,9 @@ public class MainWindow {
            File file = new File(filePath);
            Grid newGrid = MapIO.load(file);
            drawingPanel.grid = newGrid;
-
+           drawingPanel.pathSearch.Initialize(drawingPanel.grid);
+           drawingPanel.pathSearch.Enter(0, 0, drawingPanel.grid.GetWidth() - 1, drawingPanel.grid.GetHeight() - 1);
+           drawingPanel.draw();
         });
         fileMenu.getItems().addAll(loadMap);
 

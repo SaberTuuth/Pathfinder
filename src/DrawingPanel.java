@@ -247,34 +247,7 @@ public class DrawingPanel extends StackPane {
                     int y = (int) (my / tileHeight);
                     tile = grid.GetTile(x, y);
                 }
-                case HEXAGON -> {
-                    tile = getTileAtHex(mx, my);
-                    if (tile == null) return;
-
-                    int col = tile.row;
-                    int row = tile.colum;
-
-                    int[][] neighbors;
-                    if(row % 2 == 0) {
-                        neighbors = (col % 2 == 0)
-                                ? pathSearch.DIRS_HEX_EVEN_COL_EVEN_ROW
-                                : pathSearch.DIRS_HEX_EVEN_COL_ODD_ROW;
-                    }else{
-                        neighbors = (col % 2 == 0)
-                                ? pathSearch.DIRS_HEX_ODD_COL_EVEN_ROW
-                                : pathSearch.DIRS_HEX_ODD_COL_ODD_ROW;
-                    }
-
-                    for (int[] offset : neighbors) {
-                        int nCol = col + offset[0];
-                        int nRow = row + offset[1];
-
-                        Tile neighbor = grid.GetTile(nCol, nRow);
-                        if (neighbor != null) {
-                            neighbor.walkable = !neighbor.walkable;
-                        }
-                    }
-                }
+                case HEXAGON -> tile = getTileAtHex(mx, my);
                 case TRIANGLE -> tile = getTileAtTriangle(mx, my);
                 default -> {
                 }
@@ -288,7 +261,6 @@ public class DrawingPanel extends StackPane {
                     tile.weight = 1;
                 }
             }
-            System.out.println(tile.row + ' ' + tile.colum);
             draw();
 
         });
