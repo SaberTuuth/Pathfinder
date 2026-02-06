@@ -33,12 +33,12 @@ public class MainWindow {
         MenuItem loadMap = new MenuItem("Load Map");
         loadMap.setOnAction(e -> {
             String filePath = "map1.txt";
-           File file = new File(filePath);
-           Grid newGrid = MapIO.load(file);
-           drawingPanel.grid = newGrid;
-           drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-           drawingPanel.pathSearch.Enter(0, 0, drawingPanel.grid.GetWidth() - 1, drawingPanel.grid.GetHeight() - 1);
-           drawingPanel.draw();
+            File file = new File(filePath);
+            Grid newGrid = MapIO.load(file);
+            drawingPanel.grid = newGrid;
+            drawingPanel.pathSearch.Initialize(drawingPanel.grid);
+            drawingPanel.pathSearch.Enter(0, 0, drawingPanel.grid.GetWidth() - 1, drawingPanel.grid.GetHeight() - 1);
+            drawingPanel.draw();
         });
         fileMenu.getItems().addAll(loadMap);
 
@@ -135,6 +135,26 @@ public class MainWindow {
             startSearch();
         });
 
+        Button stepBtn = new Button("Step");
+        stepBtn.setOnAction(e -> {
+            boolean running = drawingPanel.pathSearch.UpdateStep();
+            drawingPanel.draw();
+            if (running && searchTimeline != null) {
+                searchTimeline.stop();
+            }
+        });
+
+        Button fastForwardBtn = new Button("Fast Forward");
+        fastForwardBtn.setOnAction(e ->{
+            while (true) {
+                boolean running = drawingPanel.pathSearch.UpdateStep();
+                if (!running) {
+                    break;
+                }
+            }
+            drawingPanel.draw();
+        });
+
         Button resetBtn = new Button("Reset");
         resetBtn.setOnAction(e -> {
             ResetGrid();
@@ -156,7 +176,7 @@ public class MainWindow {
             drawingPanel.tileSelect = DrawingPanel.TileSelect.GOAL;
         });
 
-        ToolBar toolbar = new ToolBar(runBtn, resetBtn, showNeighbors, startTileBtn, goalTileBtn);
+        ToolBar toolbar = new ToolBar(runBtn, stepBtn, fastForwardBtn, resetBtn, showNeighbors, startTileBtn, goalTileBtn);
 
         BorderPane root = new BorderPane();
         root.setTop(new VBox(menuBar, toolbar));
@@ -189,6 +209,20 @@ public class MainWindow {
 
         searchTimeline.setCycleCount(Animation.INDEFINITE);
         searchTimeline.play();
+    }
+
+    private void stepForward() {
+        if (drawingPanel.pathSearch == null) return;
+        if (drawingPanel.pathSearch.StartTile == null) return;
+        if (drawingPanel.pathSearch.GoalTile == null) return;
+
+        boolean running = drawingPanel.pathSearch.UpdateStep();
+        drawingPanel.draw();
+
+        // Optional: stop timeline if user was stepping manually
+        if (!running && searchTimeline != null) {
+            searchTimeline.stop();
+        }
     }
 
     private void ResetGrid() {
