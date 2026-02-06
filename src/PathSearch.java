@@ -12,7 +12,9 @@ public class PathSearch {
     public enum SearchMethod {
         BFS,
         DFS,
-        GREEDY
+        GREEDY,
+        UNIFORM,
+        ASTAR
     }
 
     public class SearchNode {
@@ -29,8 +31,8 @@ public class PathSearch {
         public SearchNode searchNode;
         public PathNode parent;
         public int heuristicCost; // h
-        public double givenCost;     // g
-        public double finalCost;     // f = g + h
+        public int givenCost;     // g
+        public int finalCost;     // f = g + h
 
         // Add other cost variables as needed
         public PathNode(SearchNode searchNode, PathNode parent) {
@@ -102,8 +104,8 @@ public class PathSearch {
     public Directions DIRS = Directions.SQUARE_FOUR_DIR;
     public static SearchMethod Search = SearchMethod.BFS;
     Grid TileGrid;
-    SearchNode StartTile;
-    SearchNode GoalTile;
+    public SearchNode StartTile;
+    public SearchNode GoalTile;
     Queue<PathNode> openQueue = new ArrayDeque<>();
     Stack<PathNode> openStack = new Stack<>();
     PriorityQueue<PathNode> openPriorityQueue = new PriorityQueue<>(new GreedyComparator());
@@ -208,6 +210,9 @@ public class PathSearch {
             Shutdown();
         }
         PathNode startNode = new PathNode(StartTile, null);
+        startNode.heuristicCost = heuristic(StartTile.tile, GoalTile.tile);
+        startNode.givenCost = 0;
+        startNode.finalCost = calculateFinalCost(startNode.givenCost, startNode.heuristicCost, startNode.searchNode.tile.weight);
         VisitedNodes.put(StartTile, startNode);
         openQueue.add(startNode);
         openStack.add(startNode);
@@ -224,6 +229,12 @@ public class PathSearch {
             }
             case GREEDY -> {
                 return GreedyBFS();
+            }
+            case UNIFORM -> {
+                return UniformCostSearch();
+            }
+            case ASTAR -> {
+                return AStarSearch();
             }
         }
         return false;
@@ -309,7 +320,6 @@ public class PathSearch {
 
         PathNode currentNode = openPriorityQueue.poll();
         Tile currentTile = currentNode.searchNode.tile;
-        currentNode.heuristicCost = heuristic(StartTile.tile, GoalTile.tile);
 
         if (currentNode.searchNode == GoalTile) {
             Exit();
@@ -332,10 +342,90 @@ public class PathSearch {
         return true;
     }
 
+    public boolean UniformCostSearch(){
+        if(openPriorityQueue.isEmpty()){
+            return false;
+        }
+
+        PathNode currentNode = openPriorityQueue.poll();
+        Tile currentTile = currentNode.searchNode.tile;
+
+        if (currentNode.searchNode == GoalTile) {
+            Exit();
+            return false;
+        }
+
+        for (SearchNode neighborNode : currentNode.searchNode.neighbors) {
+            if (!neighborNode.tile.walkable) continue;
+            if (neighborNode.tile.inClosedSet) continue;
+            int newCost = currentNode.givenCost + neighborNode.tile.weight;
+
+            // If we've seen this node before with a cheaper cost, skip it
+            if (VisitedNodes.containsKey(neighborNode)) {
+                int bestCost = VisitedNodes.get(neighborNode).givenCost;
+                if (newCost >= bestCost) {
+                    continue;
+                }
+            }
+
+            PathNode nextNode = new PathNode(neighborNode, currentNode);
+            nextNode.givenCost = newCost;
+            neighborNode.tile.inOpenSet = true;
+            VisitedNodes.put(neighborNode, nextNode);
+            openPriorityQueue.add(nextNode);
+        }
+        currentTile.inOpenSet = false;
+        currentTile.inClosedSet = true;
+        return true;
+    }
+
+    public boolean AStarSearch(){
+        if(openPriorityQueue.isEmpty()){
+            return false;
+        }
+
+        PathNode currentNode = openPriorityQueue.poll();
+        Tile currentTile = currentNode.searchNode.tile;
+
+        if (currentNode.searchNode == GoalTile) {
+            Exit();
+            return false;
+        }
+
+        for (SearchNode neighborNode : currentNode.searchNode.neighbors) {
+            if (!neighborNode.tile.walkable) continue;
+            if (neighborNode.tile.inClosedSet) continue;
+            int newCost = currentNode.givenCost + neighborNode.tile.weight;
+
+            // If we've seen this node before with a cheaper cost, skip it
+            if (VisitedNodes.containsKey(neighborNode)) {
+                int bestCost = VisitedNodes.get(neighborNode).givenCost;
+                if (newCost >= bestCost) {
+                    continue;
+                }
+            }
+
+            PathNode nextNode = new PathNode(neighborNode, currentNode);
+            nextNode.givenCost = newCost;
+            nextNode.heuristicCost = heuristic(nextNode.searchNode.tile, GoalTile.tile);
+            nextNode.finalCost = calculateFinalCost(nextNode.givenCost, nextNode.heuristicCost, nextNode.searchNode.tile.weight);
+            neighborNode.tile.inOpenSet = true;
+            VisitedNodes.put(neighborNode, nextNode);
+            openPriorityQueue.add(nextNode);
+        }
+        currentTile.inOpenSet = false;
+        currentTile.inClosedSet = true;
+        return true;
+    }
+
+    int calculateFinalCost(int givenCost, int distance, int weight)
+    {
+        return givenCost + (weight * distance);
+    }
+
     int heuristic(Tile a, Tile b) {
         return Math.abs(a.row - b.row) + Math.abs(a.colum - b.colum);
     }
-
 
     private void Exit() {
         finalPath.clear();
@@ -349,6 +439,8 @@ public class PathSearch {
 
         Collections.reverse(finalPath);
         openQueue.clear();
+        openPriorityQueue.clear();
+        openStack.clear();
     }
 
     private void Shutdown() {

@@ -12,6 +12,7 @@ import javafx.util.Duration;
 import java.io.*;
 
 public class MainWindow {
+
     private final Stage stage;
     private final DrawingPanel drawingPanel;
     private Timeline searchTimeline;
@@ -99,7 +100,19 @@ public class MainWindow {
             ResetGrid();
         });
 
-        searchMenu.getItems().addAll(breathFirst, depthFirst, greedy);
+        MenuItem uniform = new MenuItem("Uniform Cost");
+        uniform.setOnAction(e -> {
+            drawingPanel.pathSearch.Search = PathSearch.SearchMethod.UNIFORM;
+            ResetGrid();
+        });
+
+        MenuItem AStar = new MenuItem("A* Search");
+        AStar.setOnAction(e -> {
+            drawingPanel.pathSearch.Search = PathSearch.SearchMethod.ASTAR;
+            ResetGrid();
+        });
+
+        searchMenu.getItems().addAll(breathFirst, depthFirst, greedy, uniform, AStar);
 
         Menu settingsMenu = new Menu("Settings");
         MenuItem openSettingsItem = new MenuItem("Open Settings");
@@ -134,8 +147,16 @@ public class MainWindow {
         });
 
         Button startTileBtn = new Button("Start Tile");
+        startTileBtn.setOnAction(e -> {
+            drawingPanel.tileSelect = DrawingPanel.TileSelect.START;
+        });
 
-        ToolBar toolbar = new ToolBar(runBtn, resetBtn, showNeighbors, startTileBtn);
+        Button goalTileBtn = new Button("Goal Tile");
+        goalTileBtn.setOnAction(e -> {
+            drawingPanel.tileSelect = DrawingPanel.TileSelect.GOAL;
+        });
+
+        ToolBar toolbar = new ToolBar(runBtn, resetBtn, showNeighbors, startTileBtn, goalTileBtn);
 
         BorderPane root = new BorderPane();
         root.setTop(new VBox(menuBar, toolbar));
@@ -196,4 +217,5 @@ public class MainWindow {
             searchTimeline.stop();
         }
     }
+
 }

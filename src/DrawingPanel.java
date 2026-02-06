@@ -16,6 +16,12 @@ public class DrawingPanel extends StackPane {
         HEXAGON
     }
 
+    public enum TileSelect{
+        NONE,
+        START,
+        GOAL
+    }
+
     public static class GridColors {
         public Color weighted;
         public Color blocked = Color.DARKRED;
@@ -35,6 +41,7 @@ public class DrawingPanel extends StackPane {
     double tileHeight;
     GridColors colors = new GridColors();
     public TileShape tileShape = TileShape.SQUARE;
+    public TileSelect tileSelect = TileSelect.NONE;
     public PathSearch pathSearch;
     public boolean isShowingNeighbors = false;
 
@@ -254,7 +261,24 @@ public class DrawingPanel extends StackPane {
             }
 
             if (tile != null && e.getButton() == MouseButton.PRIMARY) {
-                tile.walkable = !tile.walkable;
+                if(tileSelect.equals(TileSelect.START)){
+                    SetStartTile(tile);
+                    pathSearch.Initialize(grid);
+                    pathSearch.Enter(tile.row, tile.colum, pathSearch.GoalTile.tile.row, pathSearch.GoalTile.tile.colum);
+                    tileSelect = TileSelect.NONE;
+                    draw();
+                    return;
+                }
+                else if(tileSelect.equals(TileSelect.GOAL)){
+                    SetGoalTile(tile);
+                    pathSearch.Initialize(grid);
+                    pathSearch.Enter(pathSearch.StartTile.tile.row, pathSearch.StartTile.tile.colum, tile.row, tile.colum);
+                    tileSelect = TileSelect.NONE;
+                    draw();
+                }
+                else {
+                    tile.walkable = !tile.walkable;
+                }
             } else if (tile != null && e.getButton() == MouseButton.SECONDARY) {
                 tile.weight++;
                 if (tile.weight > 10) {
@@ -264,6 +288,32 @@ public class DrawingPanel extends StackPane {
             draw();
 
         });
+    }
+
+    private void SetStartTile(Tile tile){
+        if(!tile.walkable){
+            return;
+        }
+        if(pathSearch.StartTile != null){
+            pathSearch.StartTile.tile.isStart = false;
+            pathSearch.VisitedNodes.clear();
+            pathSearch.openPriorityQueue.clear();
+            pathSearch.openQueue.clear();
+            pathSearch.openStack.clear();
+        }
+        pathSearch.StartTile.tile = tile;
+        pathSearch.StartTile.tile.isStart = true;
+    }
+
+    private void SetGoalTile(Tile tile){
+        if(!tile.walkable){
+            return;
+        }
+        if(pathSearch.GoalTile != null){
+            pathSearch.GoalTile.tile.isGoal = false;
+        }
+        pathSearch.GoalTile.tile = tile;
+        pathSearch.GoalTile.tile.isGoal = true;
     }
 
     private Tile getTileAtHex(double mx, double my) {
