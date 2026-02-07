@@ -27,20 +27,37 @@ public class MainWindow {
     private void SetupUI() {
 
         MenuBar menuBar = new MenuBar();
-
+        FileChooser chooser = new FileChooser();
         Menu fileMenu = new Menu("File");
 
-        MenuItem loadMap = new MenuItem("Load Map");
+        MenuItem loadMap = new MenuItem("Open");
         loadMap.setOnAction(e -> {
-            String filePath = "map1.txt";
-            File file = new File(filePath);
+            File file = chooser.showOpenDialog(stage);
             Grid newGrid = MapIO.load(file);
             drawingPanel.grid = newGrid;
             drawingPanel.pathSearch.Initialize(drawingPanel.grid);
             drawingPanel.pathSearch.Enter(0, 0, drawingPanel.grid.GetWidth() - 1, drawingPanel.grid.GetHeight() - 1);
             drawingPanel.draw();
         });
-        fileMenu.getItems().addAll(loadMap);
+
+        MenuItem saveMap = new MenuItem("Save");
+        saveMap.setOnAction(e -> {
+            chooser.setTitle("Save Map");
+
+            chooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Text Files", "*.txt")
+            );
+
+            chooser.setInitialFileName("newMap.txt");
+
+            File file = chooser.showSaveDialog(Main.mainStage);
+
+            if (file == null)
+                return;
+
+            MapIO.save(file, drawingPanel.grid);
+        });
+        fileMenu.getItems().addAll(loadMap, saveMap);
 
         Menu viewMenu = new Menu("View");
         MenuItem randomize = new MenuItem("Randomize Tile State");

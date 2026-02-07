@@ -17,7 +17,7 @@ public class DrawingPanel extends StackPane {
         HEXAGON
     }
 
-    public enum TileSelect{
+    public enum TileSelect {
         NONE,
         START,
         GOAL
@@ -231,7 +231,7 @@ public class DrawingPanel extends StackPane {
     public void drawNeighborLines() {
         for (Map.Entry<Tile, PathSearch.SearchNode> entry : pathSearch.Nodes.entrySet()) {
             Tile tile = entry.getKey();
-            if(tile.blocked){
+            if (tile.blocked) {
                 continue;
             }
             PathSearch.SearchNode node = entry.getValue();
@@ -261,25 +261,24 @@ public class DrawingPanel extends StackPane {
             }
 
             if (tile != null && e.getButton() == MouseButton.PRIMARY) {
-                if(tileSelect.equals(TileSelect.START)){
+                if (tileSelect.equals(TileSelect.START)) {
                     SetStartTile(tile);
                     pathSearch.Initialize(grid);
                     pathSearch.Enter(tile.row, tile.colum, pathSearch.GoalTile.tile.row, pathSearch.GoalTile.tile.colum);
                     tileSelect = TileSelect.NONE;
                     draw();
                     return;
-                }
-                else if(tileSelect.equals(TileSelect.GOAL)){
+                } else if (tileSelect.equals(TileSelect.GOAL)) {
                     SetGoalTile(tile);
                     pathSearch.Initialize(grid);
                     pathSearch.Enter(pathSearch.StartTile.tile.row, pathSearch.StartTile.tile.colum, tile.row, tile.colum);
                     tileSelect = TileSelect.NONE;
                     draw();
-                }
-                else {
+                } else {
                     tile.walkable = !tile.walkable;
                 }
             } else if (tile != null && e.getButton() == MouseButton.SECONDARY) {
+                if (tile.blocked) return;
                 tile.weight++;
                 if (tile.weight > 10) {
                     tile.weight = 1;
@@ -290,11 +289,11 @@ public class DrawingPanel extends StackPane {
 
     }
 
-    private void SetStartTile(Tile tile){
-        if(!tile.walkable){
+    private void SetStartTile(Tile tile) {
+        if (!tile.walkable) {
             return;
         }
-        if(pathSearch.StartTile != null){
+        if (pathSearch.StartTile != null) {
             pathSearch.StartTile.tile.isStart = false;
             pathSearch.VisitedNodes.clear();
             pathSearch.openPriorityQueue.clear();
@@ -305,11 +304,11 @@ public class DrawingPanel extends StackPane {
         pathSearch.StartTile.tile.isStart = true;
     }
 
-    private void SetGoalTile(Tile tile){
-        if(!tile.walkable){
+    private void SetGoalTile(Tile tile) {
+        if (!tile.walkable) {
             return;
         }
-        if(pathSearch.GoalTile != null){
+        if (pathSearch.GoalTile != null) {
             pathSearch.GoalTile.tile.isGoal = false;
         }
         pathSearch.GoalTile.tile = tile;
@@ -491,12 +490,12 @@ public class DrawingPanel extends StackPane {
         }
     }
 
-    public void RandomizeTileState(){
+    public void RandomizeTileState() {
         ResetGridState();
-        for(int i = 0; i < grid.GetWidth(); i++){
-            for(int j = 0; j < grid.GetHeight(); j++){
+        for (int i = 0; i < grid.GetWidth(); i++) {
+            for (int j = 0; j < grid.GetHeight(); j++) {
                 Tile tile = grid.GetTile(i, j);
-                if (tile.isGoal || tile.isStart){
+                if (tile.isGoal || tile.isStart) {
                     continue;
                 }
                 int choice = random.nextInt(1, 101);
@@ -509,9 +508,9 @@ public class DrawingPanel extends StackPane {
         draw();
     }
 
-    public void RandomizeTileWeights(){
+    public void RandomizeTileWeights() {
         ResetGridWeights();
-        for(int i = 0; i < grid.GetWidth(); i++) {
+        for (int i = 0; i < grid.GetWidth(); i++) {
             for (int j = 0; j < grid.GetHeight(); j++) {
                 Tile tile = grid.GetTile(i, j);
                 if (tile.isGoal || tile.isStart || !tile.walkable || tile.blocked) {
@@ -519,7 +518,7 @@ public class DrawingPanel extends StackPane {
                 }
                 int choice = random.nextInt(1, 50);
 
-                if(choice >= 25){
+                if (choice >= 25) {
                     choice = random.nextInt(1, 10);
                     tile.weight = choice;
                 }
