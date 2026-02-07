@@ -5,6 +5,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 import java.util.Map;
+import java.util.Random;
 
 import static java.lang.Math.sqrt;
 
@@ -36,7 +37,8 @@ public class DrawingPanel extends StackPane {
     private final GraphicsContext gc;
     private int gridWidth = 20;
     private int gridHeight = 20;
-    Grid grid;
+    public Grid grid;
+
     double tileWidth;
     double tileHeight;
     GridColors colors = new GridColors();
@@ -54,6 +56,8 @@ public class DrawingPanel extends StackPane {
     double triangleHeight;
     private double triangleStartX;
     private double triangleStartY;
+
+    Random random = new Random();
 
     public DrawingPanel() {
         canvas = new Canvas();
@@ -155,6 +159,7 @@ public class DrawingPanel extends StackPane {
                 double py = y * tileHeight;
 
                 SetTileFill(tile);
+                gc.setLineWidth(2);
                 gc.setStroke(Color.BLACK);
 
                 switch (tileShape) {
@@ -175,7 +180,6 @@ public class DrawingPanel extends StackPane {
                 }
             }
         }
-
     }
 
     private void drawLineBetweenTiles(Tile a, Tile b) {
@@ -238,10 +242,6 @@ public class DrawingPanel extends StackPane {
         }
     }
 
-    public Canvas GetCanvas() {
-        return canvas;
-    }
-
     private void setupMouseHandlers() {
         canvas.setOnMouseClicked(e -> {
             double mx = e.getX();
@@ -286,8 +286,8 @@ public class DrawingPanel extends StackPane {
                 }
             }
             draw();
-
         });
+
     }
 
     private void SetStartTile(Tile tile){
@@ -489,5 +489,80 @@ public class DrawingPanel extends StackPane {
             colors.weighted = Color.gray(1.0 - t);
             gc.setFill(colors.weighted);
         }
+    }
+
+    public void RandomizeTileState(){
+        ResetGridState();
+        for(int i = 0; i < grid.GetWidth(); i++){
+            for(int j = 0; j < grid.GetHeight(); j++){
+                Tile tile = grid.GetTile(i, j);
+                if (tile.isGoal || tile.isStart){
+                    continue;
+                }
+                int choice = random.nextInt(1, 101);
+
+                if (choice >= 75) {
+                    tile.walkable = !tile.walkable;
+                }
+            }
+        }
+        draw();
+    }
+
+    public void RandomizeTileWeights(){
+        ResetGridWeights();
+        for(int i = 0; i < grid.GetWidth(); i++) {
+            for (int j = 0; j < grid.GetHeight(); j++) {
+                Tile tile = grid.GetTile(i, j);
+                if (tile.isGoal || tile.isStart || !tile.walkable || tile.blocked) {
+                    continue;
+                }
+                int choice = random.nextInt(1, 50);
+
+                if(choice >= 25){
+                    choice = random.nextInt(1, 10);
+                    tile.weight = choice;
+                }
+            }
+        }
+        draw();
+    }
+
+    private void ResetGridState() {
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                Tile tile = grid.GetTile(x, y);
+                if (tile.isStart || tile.isGoal || tile.blocked) {
+                    continue;
+                }
+                tile.walkable = true;
+            }
+        }
+    }
+
+    private void ResetGridWeights() {
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                Tile tile = grid.GetTile(x, y);
+                if (tile.isStart || tile.isGoal || tile.blocked) {
+                    continue;
+                }
+                tile.weight = 1;
+            }
+        }
+    }
+
+    public void ResetGrid() {
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                Tile tile = grid.GetTile(x, y);
+                if (tile.isStart || tile.isGoal || tile.blocked) {
+                    continue;
+                }
+                tile.weight = 1;
+                tile.walkable = true;
+            }
+        }
+        draw();
     }
 }

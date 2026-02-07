@@ -43,6 +43,23 @@ public class MainWindow {
         fileMenu.getItems().addAll(loadMap);
 
         Menu viewMenu = new Menu("View");
+        MenuItem randomize = new MenuItem("Randomize Tile State");
+        randomize.setOnAction(e ->{
+            drawingPanel.RandomizeTileState();
+        });
+
+        MenuItem randomizeWeights = new MenuItem("Randomize Tile Weights");
+        randomizeWeights.setOnAction(e ->{
+            drawingPanel.RandomizeTileWeights();
+        });
+
+        MenuItem reset = new MenuItem("Reset Grid");
+        reset.setOnAction(e ->{
+            drawingPanel.ResetGrid();
+        });
+
+        viewMenu.getItems().addAll(randomize, randomizeWeights, reset);
+
         Menu gridMenu = new Menu("Grid");
         MenuItem squareGrid_4_DIRS = new MenuItem("Square Grid 4 Directions");
         squareGrid_4_DIRS.setOnAction(e -> {
@@ -137,11 +154,7 @@ public class MainWindow {
 
         Button stepBtn = new Button("Step");
         stepBtn.setOnAction(e -> {
-            boolean running = drawingPanel.pathSearch.UpdateStep();
-            drawingPanel.draw();
-            if (running && searchTimeline != null) {
-                searchTimeline.stop();
-            }
+            stepForward();
         });
 
         Button fastForwardBtn = new Button("Fast Forward");
