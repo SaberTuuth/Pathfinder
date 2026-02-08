@@ -4,6 +4,7 @@ import javafx.animation.Timeline;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -17,6 +18,10 @@ public class MainWindow {
     private final DrawingPanel drawingPanel;
     private Timeline searchTimeline;
     private int stepDelay = 50;
+    Label nodesLabel;
+    Label algorithmLabel;
+    Label timeLabel;
+    Label statusLabel;
 
     public MainWindow(Stage stage) {
         this.stage = stage;
@@ -29,6 +34,11 @@ public class MainWindow {
         MenuBar menuBar = new MenuBar();
         FileChooser chooser = new FileChooser();
         Menu fileMenu = new Menu("File");
+
+        MenuItem newMap = new MenuItem("New");
+        newMap.setOnAction(e ->{
+            drawingPanel.NewGrid();
+        });
 
         MenuItem loadMap = new MenuItem("Open");
         loadMap.setOnAction(e -> {
@@ -57,21 +67,26 @@ public class MainWindow {
 
             MapIO.save(file, drawingPanel.grid);
         });
-        fileMenu.getItems().addAll(loadMap, saveMap);
+
+        MenuItem close = new MenuItem("Close");
+        close.setOnAction(e ->{
+            stage.close();
+        });
+        fileMenu.getItems().addAll(newMap, loadMap, saveMap, close);
 
         Menu viewMenu = new Menu("View");
         MenuItem randomize = new MenuItem("Randomize Tile State");
-        randomize.setOnAction(e ->{
+        randomize.setOnAction(e -> {
             drawingPanel.RandomizeTileState();
         });
 
         MenuItem randomizeWeights = new MenuItem("Randomize Tile Weights");
-        randomizeWeights.setOnAction(e ->{
+        randomizeWeights.setOnAction(e -> {
             drawingPanel.RandomizeTileWeights();
         });
 
         MenuItem reset = new MenuItem("Reset Grid");
-        reset.setOnAction(e ->{
+        reset.setOnAction(e -> {
             drawingPanel.ResetGrid();
         });
 
@@ -119,30 +134,35 @@ public class MainWindow {
         MenuItem breathFirst = new MenuItem("Breath First");
         breathFirst.setOnAction(e -> {
             drawingPanel.pathSearch.Search = PathSearch.SearchMethod.BFS;
+            algorithmLabel.setText("Algorithm: BFS");
             ResetGrid();
         });
 
         MenuItem depthFirst = new MenuItem("Depth First");
         depthFirst.setOnAction(e -> {
             drawingPanel.pathSearch.Search = PathSearch.SearchMethod.DFS;
+            algorithmLabel.setText("Algorithm: DFS");
             ResetGrid();
         });
 
         MenuItem greedy = new MenuItem("Greedy Best First");
         greedy.setOnAction(e -> {
             drawingPanel.pathSearch.Search = PathSearch.SearchMethod.GREEDY;
+            algorithmLabel.setText("Algorithm: Greedy");
             ResetGrid();
         });
 
         MenuItem uniform = new MenuItem("Uniform Cost");
         uniform.setOnAction(e -> {
             drawingPanel.pathSearch.Search = PathSearch.SearchMethod.UNIFORM;
+            algorithmLabel.setText("Algorithm: Uniform-Cost");
             ResetGrid();
         });
 
         MenuItem AStar = new MenuItem("A* Search");
         AStar.setOnAction(e -> {
             drawingPanel.pathSearch.Search = PathSearch.SearchMethod.ASTAR;
+            algorithmLabel.setText("Algorithm: A*");
             ResetGrid();
         });
 
@@ -164,9 +184,17 @@ public class MainWindow {
                 settingsMenu
         );
 
-        Button runBtn = new Button("Run");
+        Button runBtn = new Button("Play");
         runBtn.setOnAction(e -> {
             startSearch();
+        });
+
+        Button pause = new Button("Pause");
+        pause.setOnAction(e ->{
+            if(searchTimeline != null){
+                searchTimeline.pause();
+                statusLabel.setText("Paused...");
+            }
         });
 
         Button stepBtn = new Button("Step");
@@ -175,7 +203,7 @@ public class MainWindow {
         });
 
         Button fastForwardBtn = new Button("Fast Forward");
-        fastForwardBtn.setOnAction(e ->{
+        fastForwardBtn.setOnAction(e -> {
             while (true) {
                 boolean running = drawingPanel.pathSearch.UpdateStep();
                 if (!running) {
@@ -206,11 +234,20 @@ public class MainWindow {
             drawingPanel.tileSelect = DrawingPanel.TileSelect.GOAL;
         });
 
-        ToolBar toolbar = new ToolBar(runBtn, stepBtn, fastForwardBtn, resetBtn, showNeighbors, startTileBtn, goalTileBtn);
+        ToolBar toolbar = new ToolBar(runBtn, pause, stepBtn, fastForwardBtn, resetBtn, showNeighbors, startTileBtn, goalTileBtn);
+
+        statusLabel = new Label("Ready");
+        algorithmLabel = new Label("Algorithm: BFS");
+        timeLabel = new Label("Time: 0 ms");
+        nodesLabel = new Label("Visited: 0");
+
+        HBox statusBar = new HBox(20); // spacing
+        statusBar.getChildren().addAll(statusLabel, algorithmLabel, timeLabel, nodesLabel);
 
         BorderPane root = new BorderPane();
         root.setTop(new VBox(menuBar, toolbar));
         root.setCenter(drawingPanel);
+        root.setBottom(statusBar);
         Scene scene = new Scene(root, 1200, 800);
 
         stage.setScene(scene);
@@ -225,14 +262,23 @@ public class MainWindow {
         if (searchTimeline != null) {
             searchTimeline.stop();
         }
+        long startTime = System.nanoTime();
+        statusLabel.setText("Running...");
 
         searchTimeline = new Timeline(
                 new KeyFrame(Duration.millis(stepDelay), e -> {
                     boolean running = drawingPanel.pathSearch.UpdateStep();
                     drawingPanel.draw();
+                    nodesLabel.setText("Visited: " + drawingPanel.pathSearch.VisitedNodes.size());
+                    long endTime = System.nanoTime();
+                    long durationMs = (endTime - startTime) / 1_000_000;
+                    timeLabel.setText("Time: " + durationMs + " ms");
 
                     if (!running) {
                         searchTimeline.stop();
+                        endTime = System.nanoTime();
+                        durationMs = (endTime - startTime) / 1_000_000;
+                        timeLabel.setText("Time: " + durationMs + " ms");
                     }
                 })
         );
@@ -248,6 +294,8 @@ public class MainWindow {
 
         boolean running = drawingPanel.pathSearch.UpdateStep();
         drawingPanel.draw();
+        statusLabel.setText("Single Iteration");
+        nodesLabel.setText("Visited: " + drawingPanel.pathSearch.VisitedNodes.size());
 
         // Optional: stop timeline if user was stepping manually
         if (!running && searchTimeline != null) {
@@ -263,6 +311,9 @@ public class MainWindow {
 
         // Reset the search
         drawingPanel.pathSearch.ResetSearch();
+        statusLabel.setText("Ready");
+        timeLabel.setText("Time: 0 ms");
+        nodesLabel.setText("Visited: 0");
 
         // Redraw the panel
         drawingPanel.draw();

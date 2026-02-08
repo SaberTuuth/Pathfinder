@@ -31,6 +31,7 @@ public class DrawingPanel extends StackPane {
         public Color openSet = Color.LIGHTBLUE;
         public Color closedSet = Color.DARKBLUE;
         public Color path = Color.LIGHTGREEN;
+        public Color Current = Color.ORANGE;
     }
 
     public final Canvas canvas;
@@ -93,6 +94,7 @@ public class DrawingPanel extends StackPane {
         gc.setFill(Color.DARKGRAY);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         DrawGrid();
+        DrawLinePath();
         if (isShowingNeighbors) {
             drawNeighborLines();
         }
@@ -182,6 +184,19 @@ public class DrawingPanel extends StackPane {
         }
     }
 
+    private void DrawLinePath() {
+        if (pathSearch.CurrentTile == null) {
+            return;
+        }
+
+        while (pathSearch.CurrentTile.parent != null) {
+            gc.setStroke(Color.YELLOW);
+            gc.setLineWidth(2);
+            drawLineBetweenTiles(pathSearch.CurrentTile.searchNode.tile, pathSearch.CurrentTile.parent.searchNode.tile);
+            pathSearch.CurrentTile = pathSearch.CurrentTile.parent;
+        }
+    }
+
     private void drawLineBetweenTiles(Tile a, Tile b) {
         double x1, y1, x2, y2;
 
@@ -191,16 +206,16 @@ public class DrawingPanel extends StackPane {
                 double tileW = canvas.getWidth() / gridWidth;
                 double tileH = canvas.getHeight() / gridHeight;
 
-                x1 = a.colum * tileW + tileW / 2;
-                y1 = a.row * tileH + tileH / 2;
+                x1 = a.row * tileW + tileW / 2;
+                y1 = a.colum * tileH + tileH / 2;
 
-                x2 = b.colum * tileW + tileW / 2;
-                y2 = b.row * tileH + tileH / 2;
+                x2 = b.row * tileW + tileW / 2;
+                y2 = b.colum * tileH + tileH / 2;
             }
 
             case HEXAGON -> {
-                double[] c1 = getHexCenter(a.colum, a.row);
-                double[] c2 = getHexCenter(b.colum, b.row);
+                double[] c1 = getHexCenter(a.row, a.colum);
+                double[] c2 = getHexCenter(b.row, b.colum);
 
                 x1 = c1[0];
                 y1 = c1[1];
@@ -286,7 +301,6 @@ public class DrawingPanel extends StackPane {
             }
             draw();
         });
-
     }
 
     private void SetStartTile(Tile tile) {
@@ -469,7 +483,9 @@ public class DrawingPanel extends StackPane {
     }
 
     private void SetTileFill(Tile tile) {
-        if (!tile.walkable) {
+        if (pathSearch.CurrentTile != null && tile == pathSearch.CurrentTile.searchNode.tile) {
+            gc.setFill(colors.Current);
+        } else if (!tile.walkable) {
             gc.setFill(colors.blocked);
         } else if (tile.isStart) {
             gc.setFill(colors.start);
@@ -563,5 +579,9 @@ public class DrawingPanel extends StackPane {
             }
         }
         draw();
+    }
+
+    public void NewGrid() {
+        setGridSize(20, 20);
     }
 }

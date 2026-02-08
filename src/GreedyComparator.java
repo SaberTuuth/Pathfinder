@@ -8,10 +8,9 @@ public class GreedyComparator implements Comparator<PathSearch.PathNode> {
             return Integer.compare(lhn.heuristicCost, rhn.heuristicCost);
         } else if (PathSearch.Search.equals(PathSearch.SearchMethod.UNIFORM)) {
             return Integer.compare(lhn.givenCost, rhn.givenCost);
-        }
-        else if (PathSearch.Search.equals(PathSearch.SearchMethod.ASTAR)){
+        } else if (PathSearch.Search.equals(PathSearch.SearchMethod.ASTAR)) {
             return Integer.compare(lhn.finalCost, rhn.finalCost);
-        }else {
+        } else {
             return 1;
         }
     }

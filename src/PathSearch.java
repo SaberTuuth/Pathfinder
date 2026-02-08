@@ -106,6 +106,7 @@ public class PathSearch {
     Grid TileGrid;
     public SearchNode StartTile;
     public SearchNode GoalTile;
+    public PathNode CurrentTile;
     Queue<PathNode> openQueue = new ArrayDeque<>();
     Stack<PathNode> openStack = new Stack<>();
     PriorityQueue<PathNode> openPriorityQueue = new PriorityQueue<>(new GreedyComparator());
@@ -128,7 +129,7 @@ public class PathSearch {
                 Tile currentTile = TileGrid.GetTile(x, y);
                 currentTile.row = x;
                 currentTile.colum = y;
-                if (currentTile != null && currentTile.weight > 0) { // TODO: add check for weight later
+                if (currentTile != null && currentTile.weight > 0) {
                     SearchNode searchNode = new SearchNode(currentTile);
                     Nodes.put(currentTile, searchNode);
                 }
@@ -191,7 +192,7 @@ public class PathSearch {
                     if (dx >= 0 && dx < TileGrid.GetWidth() &&
                             dy >= 0 && dy < TileGrid.GetHeight()) {
                         Tile neighborTile = TileGrid.GetTile(dx, dy);
-                        if (neighborTile != null && neighborTile.walkable && Nodes.containsKey(neighborTile) && neighborTile.weight > 0 && !neighborTile.blocked) {// TODO: add check for weights later
+                        if (neighborTile != null && neighborTile.walkable && Nodes.containsKey(neighborTile) && neighborTile.weight > 0 && !neighborTile.blocked) {
                             SearchNode neighborNode = Nodes.get(neighborTile);
                             currentNode.neighbors.add(neighborNode);
                         }
@@ -246,8 +247,10 @@ public class PathSearch {
         }
         PathNode currentNode = openQueue.poll();
         Tile currentTile = currentNode.searchNode.tile;
+        CurrentTile = currentNode;
 
         if (currentNode.searchNode == GoalTile) {
+            CurrentTile = currentNode;
             Exit();
             return false;
         }
@@ -280,11 +283,13 @@ public class PathSearch {
 
         // 2. Mark closed
         Tile currentTile = currentNode.searchNode.tile;
+        CurrentTile = currentNode;
         currentTile.inOpenSet = false;
         currentTile.inClosedSet = true;
 
         // 3. Goal check
         if (currentNode.searchNode == GoalTile) {
+            CurrentTile = currentNode;
             Exit();
             return false;
         }
@@ -320,8 +325,10 @@ public class PathSearch {
 
         PathNode currentNode = openPriorityQueue.poll();
         Tile currentTile = currentNode.searchNode.tile;
+        CurrentTile = currentNode;
 
         if (currentNode.searchNode == GoalTile) {
+            CurrentTile = currentNode;
             Exit();
             return false;
         }
@@ -342,15 +349,17 @@ public class PathSearch {
         return true;
     }
 
-    public boolean UniformCostSearch(){
-        if(openPriorityQueue.isEmpty()){
+    public boolean UniformCostSearch() {
+        if (openPriorityQueue.isEmpty()) {
             return false;
         }
 
         PathNode currentNode = openPriorityQueue.poll();
         Tile currentTile = currentNode.searchNode.tile;
+        CurrentTile = currentNode;
 
         if (currentNode.searchNode == GoalTile) {
+            CurrentTile = currentNode;
             Exit();
             return false;
         }
@@ -379,15 +388,17 @@ public class PathSearch {
         return true;
     }
 
-    public boolean AStarSearch(){
-        if(openPriorityQueue.isEmpty()){
+    public boolean AStarSearch() {
+        if (openPriorityQueue.isEmpty()) {
             return false;
         }
 
         PathNode currentNode = openPriorityQueue.poll();
         Tile currentTile = currentNode.searchNode.tile;
+        CurrentTile = currentNode;
 
         if (currentNode.searchNode == GoalTile) {
+            CurrentTile = currentNode;
             Exit();
             return false;
         }
@@ -418,8 +429,7 @@ public class PathSearch {
         return true;
     }
 
-    int calculateFinalCost(int givenCost, int distance, int weight)
-    {
+    int calculateFinalCost(int givenCost, int distance, int weight) {
         return givenCost + (weight * distance);
     }
 
