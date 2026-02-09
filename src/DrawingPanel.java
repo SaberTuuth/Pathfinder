@@ -58,6 +58,10 @@ public class DrawingPanel extends StackPane {
     private double triangleStartX;
     private double triangleStartY;
 
+    private boolean isPainting = false;
+    private boolean paintWalkable = false;
+    private Tile lastTile = null;
+
     Random random = new Random();
 
     public DrawingPanel() {
@@ -258,49 +262,99 @@ public class DrawingPanel extends StackPane {
     }
 
     private void setupMouseHandlers() {
-        canvas.setOnMouseClicked(e -> {
+        canvas.setOnMousePressed(e -> {
             double mx = e.getX();
             double my = e.getY();
-            Tile tile = null;
+            Tile tile = getTileFromMouse(mx, my);
+            lastTile = null;
 
-            switch (tileShape) {
-                case SQUARE -> {
-                    int x = (int) (mx / tileWidth);
-                    int y = (int) (my / tileHeight);
-                    tile = grid.GetTile(x, y);
-                }
-                case HEXAGON -> tile = getTileAtHex(mx, my);
-                case TRIANGLE -> tile = getTileAtTriangle(mx, my);
-                default -> {
-                }
+            if (tile != null && tileSelect.equals(TileSelect.START)) {
+                SetStartTile(tile);
+                pathSearch.Initialize(grid);
+                pathSearch.Enter(tile.row, tile.colum, pathSearch.GoalTile.tile.row, pathSearch.GoalTile.tile.colum);
+                tileSelect = TileSelect.NONE;
+                draw();
+                return;
+            } else if (tile != null && tileSelect.equals(TileSelect.GOAL)) {
+                SetGoalTile(tile);
+                pathSearch.Initialize(grid);
+                pathSearch.Enter(pathSearch.StartTile.tile.row, pathSearch.StartTile.tile.colum, tile.row, tile.colum);
+                tileSelect = TileSelect.NONE;
+                draw();
+            }
+            isPainting = true;
+
+            if (e.isPrimaryButtonDown()) {
+                paintWalkable = false; // left click = wall
+                paintTile(tile);
+            }
+            if (e.isSecondaryButtonDown()) {
+                paintWalkable = true; // right click = weight painting
+                paintWeight(tile);
             }
 
-            if (tile != null && e.getButton() == MouseButton.PRIMARY) {
-                if (tileSelect.equals(TileSelect.START)) {
-                    SetStartTile(tile);
-                    pathSearch.Initialize(grid);
-                    pathSearch.Enter(tile.row, tile.colum, pathSearch.GoalTile.tile.row, pathSearch.GoalTile.tile.colum);
-                    tileSelect = TileSelect.NONE;
-                    draw();
-                    return;
-                } else if (tileSelect.equals(TileSelect.GOAL)) {
-                    SetGoalTile(tile);
-                    pathSearch.Initialize(grid);
-                    pathSearch.Enter(pathSearch.StartTile.tile.row, pathSearch.StartTile.tile.colum, tile.row, tile.colum);
-                    tileSelect = TileSelect.NONE;
-                    draw();
-                } else {
-                    tile.walkable = !tile.walkable;
-                }
-            } else if (tile != null && e.getButton() == MouseButton.SECONDARY) {
-                if (tile.blocked) return;
-                tile.weight++;
-                if (tile.weight > 10) {
-                    tile.weight = 1;
-                }
-            }
+            draw();
+
+        });
+        canvas.setOnMouseDragged(e -> {
+
+            if (!isPainting) return;
+
+            Tile tile = getTileFromMouse(e.getX(), e.getY());
+            if (tile == null || tile == lastTile) return;
+
+            if (paintWalkable)
+                paintWeight(tile);
+            else
+                paintTile(tile);
+
             draw();
         });
+        canvas.setOnMouseReleased(e -> {
+            isPainting = false;
+            lastTile = null;
+        });
+    }
+
+    private void paintTile(Tile tile) {
+
+        if (tile.isStart || tile.isGoal)
+            return;
+
+        tile.walkable = !tile.walkable;
+
+        lastTile = tile;
+    }
+
+    private void paintWeight(Tile tile) {
+
+        if (tile.blocked || !tile.walkable)
+            return;
+
+        tile.weight++;
+        if (tile.weight > 10)
+            tile.weight = 1;
+
+        lastTile = tile;
+    }
+
+    private Tile getTileFromMouse(double mx, double my) {
+
+        switch (tileShape) {
+            case SQUARE -> {
+                int x = (int) (mx / tileWidth);
+                int y = (int) (my / tileHeight);
+                return grid.GetTile(x, y);
+            }
+            case HEXAGON -> {
+                return getTileAtHex(mx, my);
+            }
+            case TRIANGLE -> {
+                return getTileAtTriangle(mx, my);
+            }
+        }
+
+        return null;
     }
 
     private void SetStartTile(Tile tile) {
@@ -532,9 +586,9 @@ public class DrawingPanel extends StackPane {
                 if (tile.isGoal || tile.isStart || !tile.walkable || tile.blocked) {
                     continue;
                 }
-                int choice = random.nextInt(1, 50);
+                int choice = random.nextInt(1, 101);
 
-                if (choice >= 25) {
+                if (choice >= 35) {
                     choice = random.nextInt(1, 10);
                     tile.weight = choice;
                 }
