@@ -20,7 +20,9 @@ public class DrawingPanel extends StackPane {
     public enum TileSelect {
         NONE,
         START,
-        GOAL
+        GOAL,
+        STATE,
+        WEIGHT
     }
 
     public static class GridColors {
@@ -320,10 +322,12 @@ public class DrawingPanel extends StackPane {
 
         if (tile.isStart || tile.isGoal)
             return;
-
-        tile.walkable = !tile.walkable;
-
-        lastTile = tile;
+        
+        if(tileSelect.equals(TileSelect.STATE)) {
+        	tile.walkable = false;
+        }else {
+        	tile.walkable = true;
+        }
     }
 
     private void paintWeight(Tile tile) {
@@ -331,10 +335,16 @@ public class DrawingPanel extends StackPane {
         if (tile.blocked || !tile.walkable)
             return;
 
-        tile.weight++;
-        if (tile.weight > 10)
-            tile.weight = 1;
-
+        if(tileSelect.equals(TileSelect.WEIGHT)) {
+        	if (tile.weight < 10) {
+                tile.weight++;
+        	}
+        }
+        else {
+        	if(tile.weight > 1) {
+        		tile.weight--;
+        	}
+        }
         lastTile = tile;
     }
 

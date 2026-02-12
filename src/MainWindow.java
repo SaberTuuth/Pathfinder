@@ -233,8 +233,32 @@ public class MainWindow {
         goalTileBtn.setOnAction(e -> {
             drawingPanel.tileSelect = DrawingPanel.TileSelect.GOAL;
         });
+        
+        Button setState = new Button("Tiles Walkable");
+        setState.setOnAction(e ->{
+        	if(drawingPanel.tileSelect.equals(DrawingPanel.TileSelect.STATE)) {
+        		drawingPanel.tileSelect = DrawingPanel.TileSelect.NONE;
+        		setState.setText("Tiles Walkable");
+        	}
+        	else {
+        		drawingPanel.tileSelect = DrawingPanel.TileSelect.STATE;
+        		setState.setText("Tiles Unwalkable");
+        	}
+        });
 
-        ToolBar toolbar = new ToolBar(runBtn, pause, stepBtn, fastForwardBtn, resetBtn, showNeighbors, startTileBtn, goalTileBtn);
+        Button setWeight = new Button("Remove Weights");
+        setWeight.setOnAction(e ->{
+        	if(drawingPanel.tileSelect.equals(DrawingPanel.TileSelect.WEIGHT)) {
+        		drawingPanel.tileSelect = DrawingPanel.TileSelect.NONE;
+        		setWeight.setText("Remove Weights");
+        	}
+        	else {
+        		drawingPanel.tileSelect = DrawingPanel.TileSelect.WEIGHT;
+        		setWeight.setText("Add Weights");
+        	}
+        });
+
+        ToolBar toolbar = new ToolBar(runBtn, pause, stepBtn, fastForwardBtn, resetBtn, showNeighbors, startTileBtn, goalTileBtn, setState, setWeight);
 
         statusLabel = new Label("Ready");
         algorithmLabel = new Label("Algorithm: BFS");
