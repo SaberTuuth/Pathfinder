@@ -7,8 +7,12 @@ public class Tile {
     public boolean inFinalPath = false;
     public boolean inOpenSet = false;     // frontier
     public boolean inClosedSet = false;   // visited / expanded
+    public boolean visitedMaze = false;
+    public boolean mazeCell;
     public int row;
     public int colum;
+    public int q;
+    public int r;
     public int weight = 1;
 
     public Tile(int Row, int Colum){
