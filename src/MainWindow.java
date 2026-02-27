@@ -16,16 +16,20 @@ public class MainWindow {
 
 	private final Stage stage;
 	private final DrawingPanel drawingPanel;
+	private final DrawingPanel dp2;
 	private Timeline searchTimeline;
 	private int stepDelay = 50;
 	Label nodesLabel;
 	Label algorithmLabel;
 	Label timeLabel;
 	Label statusLabel;
+	Label stepLabel;
+	int stepCount = 0;
 
 	public MainWindow(Stage stage) {
 		this.stage = stage;
 		this.drawingPanel = new DrawingPanel();
+		this.dp2 = new DrawingPanel();
 		SetupUI();
 	}
 
@@ -91,22 +95,23 @@ public class MainWindow {
 
 		MenuItem mazeBtn = new MenuItem("Generate Maze");
 		mazeBtn.setOnAction(e -> {
-			MazeGen.Start(drawingPanel.grid);
+			MazeGen.Start(drawingPanel.grid, 0, 0);
 			boolean generating;
 			while (true) {
 				if (drawingPanel.pathSearch.DIRS == PathSearch.Directions.SQUARE_FOUR_DIR
 						|| drawingPanel.pathSearch.DIRS == PathSearch.Directions.SQUARE_EIGHT_DIR) {
 					generating = MazeGen.MazeStep(drawingPanel.grid, drawingPanel.pathSearch.DIRS);
-				}
-				else {
+				} else if (drawingPanel.pathSearch.DIRS == PathSearch.Directions.HEX_SIX_DIR) {
 					generating = MazeGen.HexStep(drawingPanel.grid);
+				} else {
+					generating = MazeGen.TriangleStep(drawingPanel.grid);
 				}
 				if (!generating) {
 					break;
 				}
-				MazeGen.ConnectSpecialTile(drawingPanel.pathSearch.StartTile);
-				MazeGen.ConnectSpecialTile(drawingPanel.pathSearch.GoalTile);
 			}
+			MazeGen.ConnectSpecialTile(drawingPanel.pathSearch.StartTile);
+			MazeGen.ConnectSpecialTile(drawingPanel.pathSearch.GoalTile);
 			drawingPanel.draw();
 		});
 
@@ -277,13 +282,15 @@ public class MainWindow {
 		algorithmLabel = new Label("Algorithm: BFS");
 		timeLabel = new Label("Time: 0 ms");
 		nodesLabel = new Label("Visited: 0");
+		stepLabel = new Label("Steps: 0");
 
 		HBox statusBar = new HBox(20); // spacing
-		statusBar.getChildren().addAll(statusLabel, algorithmLabel, timeLabel, nodesLabel);
+		statusBar.getChildren().addAll(statusLabel, algorithmLabel, timeLabel, nodesLabel, stepLabel);
 
 		BorderPane root = new BorderPane();
 		root.setTop(new VBox(menuBar, toolbar));
-		root.setCenter(drawingPanel);
+		SplitPane centerContainer = new SplitPane (dp2, drawingPanel);
+		root.setCenter(centerContainer);
 		root.setBottom(statusBar);
 		Scene scene = new Scene(root, 1200, 800);
 
@@ -305,7 +312,9 @@ public class MainWindow {
 		searchTimeline = new Timeline(new KeyFrame(Duration.millis(stepDelay), e -> {
 			boolean running = drawingPanel.pathSearch.UpdateStep();
 			drawingPanel.draw();
+			stepCount++;
 			nodesLabel.setText("Visited: " + drawingPanel.pathSearch.VisitedNodes.size());
+			stepLabel.setText("Setp: " + stepCount);
 			long endTime = System.nanoTime();
 			long durationMs = (endTime - startTime) / 1_000_000;
 			timeLabel.setText("Time: " + durationMs + " ms");

@@ -16,9 +16,14 @@ public class Grid {
                 tiles[x][y].q = q;
                 tiles[x][y].r = r;
                 if ((q % 2 == 0) && (r % 2 == 0))
-                	 tiles[x][y].mazeCell = true;
+                	 tiles[x][y].hexMazeCell = true;
                 else
-                	 tiles[x][y].mazeCell = false;
+                	 tiles[x][y].hexMazeCell = false;
+                if (x % 2 == 0 && y % 2 == 0)
+                    tiles[x][y].triangleMazeCell = true;
+                else
+                    tiles[x][y].triangleMazeCell = false;
+                tiles[x][y].up = (x + y) % 2 == 0;
             }
         }
     }

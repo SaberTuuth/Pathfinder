@@ -8,7 +8,9 @@ public class Tile {
     public boolean inOpenSet = false;     // frontier
     public boolean inClosedSet = false;   // visited / expanded
     public boolean visitedMaze = false;
-    public boolean mazeCell;
+    public boolean hexMazeCell;
+    public boolean triangleMazeCell;
+    public boolean up;
     public int row;
     public int colum;
     public int q;

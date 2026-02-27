@@ -12,14 +12,17 @@ public class MazeGenerator {
 
 	private static final int[][] Four_Dirs = { { 0, 2 }, { 0, -2 }, { 2, 0 }, { -2, 0 } };
 
-	public static final int[][] HEX_DIRS = { 
-			{ 1, 0 }, // east
+	public static final int[][] HEX_DIRS = { { 1, 0 }, // east
 			{ 1, -1 }, // northeast
 			{ 0, -1 }, // northwest
 			{ -1, 0 }, // west
 			{ -1, 1 }, // southwest
 			{ 0, 1 } // southeast
 	};
+
+	private static final int[][] TRI_UP = { { -2, 0 }, { 2, 0 }, { 0, 2 } };
+
+	private static final int[][] TRI_DOWN = { { -2, 0 }, { 2, 0 }, { 0, -2 } };
 
 	private void BlockAllTiles(Grid grid) {
 		stack.clear();
@@ -37,17 +40,18 @@ public class MazeGenerator {
 		}
 	}
 
-	public void Start(Grid grid) {
+	public void Start(Grid grid, int x, int y) {
 		BlockAllTiles(grid);
-		current = grid.GetTile(0, 0);
+		current = grid.GetTile(x, y);
 		current.walkable = true;
 		current.visitedMaze = true;
+		stack.clear();
 		stack.push(current);
 	}
 
 	public boolean MazeStep(Grid grid, PathSearch.Directions directions) {
 		if (stack.isEmpty()) {
-			return false; // Maze generation finished
+			return false;
 		}
 
 		// Pop the current tile
@@ -98,7 +102,7 @@ public class MazeGenerator {
 	}
 
 	public void ConnectSpecialTile(PathSearch.SearchNode node) {
-		Tile tile = node.neighbors.get(rand.nextInt(node.neighbors.size())).tile;
+		Tile tile = node.neighbors.get((int) (Math.random() * node.neighbors.size())).tile;
 		tile.walkable = true;
 	}
 
@@ -114,7 +118,7 @@ public class MazeGenerator {
 		if (!neighbors.isEmpty()) {
 
 			// choose random neighbor
-			Tile next = neighbors.get(rand.nextInt(neighbors.size()));
+			Tile next = neighbors.get((int) Math.random() * neighbors.size());
 
 			// break wall between them
 			removeWall(current, next, grid);
@@ -123,11 +127,34 @@ public class MazeGenerator {
 			next.walkable = true;
 
 			stack.push(next);
-		}
-		else {
+		} /*else {
 			stack.pop();
-		}
+		}*/
 		return true;
+	}
+
+	public boolean TriangleStep(Grid grid) {
+		if (stack.isEmpty())
+			return false;
+
+		current = stack.peek();
+		List<Tile> neighbors = getTriangleNeighbors(current, grid);
+
+	    if (!neighbors.isEmpty()) {
+
+	        Tile next = neighbors.get(rand.nextInt(neighbors.size()));
+	        
+	        removeTriangleWall(current, next, grid);
+
+	        next.visitedMaze = true;
+	        next.walkable = true;
+
+	        stack.push(next);
+	    }
+	    else {
+	        stack.pop();
+	    }
+	    return true;
 	}
 
 	private List<Tile> getUnvisitedNeighbors(Tile t, Grid grid) {
@@ -141,25 +168,62 @@ public class MazeGenerator {
 
 			Tile neighbor = grid.GetTileHex(nq, nr);
 
-			if (neighbor != null && !neighbor.visitedMaze && neighbor.mazeCell) {
+			if (neighbor != null && !neighbor.visitedMaze && neighbor.hexMazeCell) {
 				results.add(neighbor);
 			}
 		}
 
 		return results;
 	}
-	
-	private void removeWall(Tile a, Tile b, Grid grid) {
 
-	    int midQ = (a.q + b.q) / 2;
-	    int midR = (a.r + b.r) / 2;
+	private List<Tile> getTriangleNeighbors(Tile t, Grid grid) {
+		List<Tile> neighbors = new ArrayList<>();
 
-	    Tile wall = grid.GetTileHex(midQ, midR);
+		int[][] dirs = t.up ? TRI_UP : TRI_DOWN;
 
-	    if (wall != null) {
-	        wall.walkable = true;
-	        wall.visitedMaze = true;
-	    }
+		for (int[] d : dirs) {
+
+			int nx = t.row + d[0];
+			int ny = t.colum + d[1];
+
+			// Proper bounds check FIRST
+			if (nx < 0 || nx >= grid.GetWidth() || ny < 0 || ny >= grid.GetHeight())
+				continue;
+
+			Tile neighbor = grid.GetTile(nx, ny);
+
+			if (neighbor != null && !neighbor.visitedMaze && neighbor.triangleMazeCell) {
+				neighbors.add(neighbor);
+			}
+		}
+
+		return neighbors;
 	}
 
+	private void removeTriangleWall(Tile a, Tile b, Grid grid) {
+		int midX =  (a.row + b.row) / 2;
+		int midY =  (a.colum + b.colum) / 2;
+
+		if (midX < 0 || midX >= grid.GetWidth() || midY < 0 || midY >= grid.GetHeight())
+			return;
+
+		Tile wall = grid.GetTile(midX, midY);
+		if (wall != null) {
+			wall.walkable = true;
+			wall.visitedMaze = true;
+		}
+	}
+
+	private void removeWall(Tile a, Tile b, Grid grid) {
+
+		int midQ = (a.q + b.q) / 2;
+		int midR = (a.r + b.r) / 2;
+
+		Tile wall = grid.GetTileHex(midQ, midR);
+
+		if (wall != null) {
+			wall.walkable = true;
+			wall.visitedMaze = true;
+		}
+	}
 }
