@@ -290,7 +290,7 @@ public class MainWindow {
 		BorderPane root = new BorderPane();
 		root.setTop(new VBox(menuBar, toolbar));
 		SplitPane centerContainer = new SplitPane (dp2, drawingPanel);
-		root.setCenter(centerContainer);
+		root.setCenter(drawingPanel);
 		root.setBottom(statusBar);
 		Scene scene = new Scene(root, 1200, 800);
 

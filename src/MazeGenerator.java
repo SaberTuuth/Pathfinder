@@ -102,8 +102,9 @@ public class MazeGenerator {
 	}
 
 	public void ConnectSpecialTile(PathSearch.SearchNode node) {
-		Tile tile = node.neighbors.get((int) (Math.random() * node.neighbors.size())).tile;
-		tile.walkable = true;
+		for(PathSearch.SearchNode sn : node.neighbors) {
+			sn.tile.walkable = true;
+		}
 	}
 
 	public boolean HexStep(Grid grid) {
@@ -112,24 +113,17 @@ public class MazeGenerator {
 		}
 
 		current = stack.peek();
-
 		List<Tile> neighbors = getUnvisitedNeighbors(current, grid);
 
 		if (!neighbors.isEmpty()) {
-
-			// choose random neighbor
-			Tile next = neighbors.get((int) Math.random() * neighbors.size());
-
-			// break wall between them
+			Tile next = neighbors.get(rand.nextInt(neighbors.size()));
 			removeWall(current, next, grid);
-
 			next.visitedMaze = true;
 			next.walkable = true;
-
 			stack.push(next);
-		} /*else {
+		} else {
 			stack.pop();
-		}*/
+		}
 		return true;
 	}
 
@@ -142,7 +136,7 @@ public class MazeGenerator {
 
 	    if (!neighbors.isEmpty()) {
 
-	        Tile next = neighbors.get(rand.nextInt(neighbors.size()));
+			Tile next = neighbors.get((int) (Math.random() * neighbors.size()));
 	        
 	        removeTriangleWall(current, next, grid);
 
