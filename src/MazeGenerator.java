@@ -20,7 +20,7 @@ public class MazeGenerator {
 			{ 0, 1 } // southeast
 	};
 
-	private static final int[][] TRI_UP = { { -2, 0 }, { 2, 0 }, { 0, 2 } };
+	private static final int[][] TRI_UP = { { -2, 0 }, { 2, 0 }, { 0, 2 }, { 0, -2 } };
 
 	private static final int[][] TRI_DOWN = { { -2, 0 }, { 2, 0 }, { 0, -2 } };
 
@@ -173,9 +173,9 @@ public class MazeGenerator {
 	private List<Tile> getTriangleNeighbors(Tile t, Grid grid) {
 		List<Tile> neighbors = new ArrayList<>();
 
-		int[][] dirs = t.up ? TRI_UP : TRI_DOWN;
+		//int[][] dirs = t.up ? TRI_UP : TRI_DOWN;
 
-		for (int[] d : dirs) {
+		for (int[] d : TRI_UP) {
 
 			int nx = t.row + d[0];
 			int ny = t.colum + d[1];
@@ -195,17 +195,17 @@ public class MazeGenerator {
 	}
 
 	private void removeTriangleWall(Tile a, Tile b, Grid grid) {
-		int midX =  (a.row + b.row) / 2;
-		int midY =  (a.colum + b.colum) / 2;
+		int midX = (a.row + b.row) / 2;
+	    int midY = (a.colum + b.colum) / 2;
 
-		if (midX < 0 || midX >= grid.GetWidth() || midY < 0 || midY >= grid.GetHeight())
-			return;
+	    if (midX < 0 || midX >= grid.GetWidth() || midY < 0 || midY >= grid.GetHeight())
+	        return;
 
-		Tile wall = grid.GetTile(midX, midY);
-		if (wall != null) {
-			wall.walkable = true;
-			wall.visitedMaze = true;
-		}
+	    Tile wall = grid.GetTile(midX, midY);
+	    if (wall != null) {
+	        wall.walkable = true;
+	        wall.visitedMaze = true;
+	    }
 	}
 
 	private void removeWall(Tile a, Tile b, Grid grid) {

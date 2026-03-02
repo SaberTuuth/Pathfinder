@@ -23,7 +23,7 @@ public class Grid {
                     tiles[x][y].triangleMazeCell = true;
                 else
                     tiles[x][y].triangleMazeCell = false;
-                tiles[x][y].up = (x + y) % 2 == 0;
+                tiles[x][y].up = (x / 2 + y / 2) % 2 != 0;
             }
         }
     }
