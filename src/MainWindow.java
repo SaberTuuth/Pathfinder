@@ -1,10 +1,13 @@
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -16,38 +19,65 @@ public class MainWindow {
 
 	private final Stage stage;
 	private final DrawingPanel drawingPanel;
-	private final DrawingPanel dp2;
 	private Timeline searchTimeline;
 	private int stepDelay = 50;
-	Label nodesLabel;
-	Label algorithmLabel;
-	Label timeLabel;
-	Label statusLabel;
-	Label stepLabel;
 	int stepCount = 0;
+
+	private Label nodesLabel = makeStatusLabel("Visited: ", "0");
+	private Label algorithmLabel = makeStatusLabel("Algorithm: ", "BFS");
+	private Label timeLabel = makeStatusLabel("Time: ", "0 ms");
+	private Label statusLabel = new Label("● Ready");
+	private Label stepLabel = makeStatusLabel("Steps: ", "0");
+
+	private Button stateBtn;
+	private Button weightBtn;
+
+	private final MazeGenerator mazeGen = new MazeGenerator();
+	private final FileChooser fileChooser = new FileChooser();
 
 	public MainWindow(Stage stage) {
 		this.stage = stage;
-		this.drawingPanel = new DrawingPanel();
-		this.dp2 = new DrawingPanel();
-		SetupUI();
+		drawingPanel = new DrawingPanel();
+
+		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
+		BorderPane root = new BorderPane();
+		root.getStyleClass().add("scene-root");
+
+		root.setTop(buildTop());
+		root.setCenter(drawingPanel);
+		root.setBottom(buildStatusBar());
+
+		Scene scene = new Scene(root, 1280, 900);
+		scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+	
+		stage.setTitle("Path Planner");
+		stage.setScene(scene);
+		stage.show();
 	}
 
-	private void SetupUI() {
+	private VBox buildTop() {
+		return new VBox(buildMenuBar(), buildToolBar());
+	}
 
-		MenuBar menuBar = new MenuBar();
-		FileChooser chooser = new FileChooser();
-		Menu fileMenu = new Menu("File");
-		MazeGenerator MazeGen = new MazeGenerator();
+	private MenuBar buildMenuBar() {
+		MenuBar mb = new MenuBar();
+		mb.getStyleClass().add("menu-bar");
 
-		MenuItem newMap = new MenuItem("New");
-		newMap.setOnAction(e -> {
-			drawingPanel.NewGrid();
-		});
+		mb.getMenus().addAll(buildFileMenu(), buildViewMenu(), buildGridMenu(), buildSearchMenu(), buildSettingsMenu());
+		return mb;
+	}
 
-		MenuItem loadMap = new MenuItem("Open");
-		loadMap.setOnAction(e -> {
-			File file = chooser.showOpenDialog(stage);
+	private Menu buildFileMenu() {
+		Menu m = new Menu("File");
+
+		MenuItem newItem = new MenuItem("New");
+		newItem.setOnAction(e -> drawingPanel.NewGrid());
+
+		MenuItem openItem = new MenuItem("Open");
+		openItem.setOnAction(e -> {
+			File file = fileChooser.showOpenDialog(stage);
+			if (file == null)
+				return;
 			Grid newGrid = MapIO.load(file);
 			drawingPanel.grid = newGrid;
 			drawingPanel.pathSearch.Initialize(drawingPanel.grid);
@@ -55,251 +85,237 @@ public class MainWindow {
 			drawingPanel.draw();
 		});
 
-		MenuItem saveMap = new MenuItem("Save");
-		saveMap.setOnAction(e -> {
-			chooser.setTitle("Save Map");
-
-			chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
-
-			chooser.setInitialFileName("newMap.txt");
-
-			File file = chooser.showSaveDialog(Main.mainStage);
-
+		MenuItem saveItem = new MenuItem("Save");
+		saveItem.setOnAction(e -> {
+			fileChooser.setTitle("Save Map");
+			fileChooser.setInitialFileName("newMap.txt");
+			File file = fileChooser.showSaveDialog(stage);
 			if (file == null)
 				return;
-
 			MapIO.save(file, drawingPanel.grid);
 		});
 
-		MenuItem close = new MenuItem("Close");
-		close.setOnAction(e -> {
-			stage.close();
-		});
-		fileMenu.getItems().addAll(newMap, loadMap, saveMap, close);
+		MenuItem exitItem = new MenuItem("Exit");
+		exitItem.setOnAction(e -> stage.close());
 
-		Menu viewMenu = new Menu("View");
-		MenuItem randomize = new MenuItem("Randomize Tile State");
-		randomize.setOnAction(e -> {
-			drawingPanel.RandomizeTileState();
-		});
-
-		MenuItem randomizeWeights = new MenuItem("Randomize Tile Weights");
-		randomizeWeights.setOnAction(e -> {
-			drawingPanel.RandomizeTileWeights();
-		});
-
-		MenuItem reset = new MenuItem("Reset Grid");
-		reset.setOnAction(e -> {
-			drawingPanel.ResetGrid();
-		});
-
-		MenuItem mazeBtn = new MenuItem("Generate Maze");
-		mazeBtn.setOnAction(e -> {
-			MazeGen.Start(drawingPanel.grid, 0, 0);
-			boolean generating;
-			while (true) {
-				if (drawingPanel.pathSearch.DIRS == PathSearch.Directions.SQUARE_FOUR_DIR
-						|| drawingPanel.pathSearch.DIRS == PathSearch.Directions.SQUARE_EIGHT_DIR) {
-					generating = MazeGen.MazeStep(drawingPanel.grid, drawingPanel.pathSearch.DIRS);
-				} else if (drawingPanel.pathSearch.DIRS == PathSearch.Directions.HEX_SIX_DIR) {
-					generating = MazeGen.HexStep(drawingPanel.grid);
-				} else {
-					generating = MazeGen.TriangleStep(drawingPanel.grid);
-				}
-				if (!generating) {
-					break;
-				}
-			}
-			MazeGen.ConnectSpecialTile(drawingPanel.pathSearch.StartTile);
-			MazeGen.ConnectSpecialTile(drawingPanel.pathSearch.GoalTile);
-			drawingPanel.draw();
-		});
-
-		viewMenu.getItems().addAll(randomize, randomizeWeights, reset, mazeBtn);
-
-		Menu gridMenu = new Menu("Grid");
-		MenuItem squareGrid_4_DIRS = new MenuItem("Square Grid 4 Directions");
-		squareGrid_4_DIRS.setOnAction(e -> {
-			drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_FOUR_DIR;
-			drawingPanel.tileShape = DrawingPanel.TileShape.SQUARE;
-			drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-			drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
-			ResetGrid();
-		});
-
-		MenuItem squareGrid_8_DIRS = new MenuItem("Square Grid 8 Directions");
-		squareGrid_8_DIRS.setOnAction(e -> {
-			drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_EIGHT_DIR;
-			drawingPanel.tileShape = DrawingPanel.TileShape.SQUARE;
-			drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-			drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
-			ResetGrid();
-		});
-
-		MenuItem hexGrid_6_DIRS = new MenuItem("Hexagon Grid 6 Directions");
-		hexGrid_6_DIRS.setOnAction(e -> {
-			drawingPanel.pathSearch.DIRS = PathSearch.Directions.HEX_SIX_DIR;
-			drawingPanel.tileShape = DrawingPanel.TileShape.HEXAGON;
-			drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-			drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
-			ResetGrid();
-		});
-
-		MenuItem triGrid_6_DIRS = new MenuItem("Triangle Grid 12 Directions");
-		triGrid_6_DIRS.setOnAction(e -> {
-			drawingPanel.pathSearch.DIRS = PathSearch.Directions.TRIANGLE_TWELVE_DIR;
-			drawingPanel.tileShape = DrawingPanel.TileShape.TRIANGLE;
-			drawingPanel.pathSearch.Initialize(drawingPanel.grid);
-			drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
-			ResetGrid();
-		});
-		gridMenu.getItems().addAll(squareGrid_4_DIRS, squareGrid_8_DIRS, hexGrid_6_DIRS, triGrid_6_DIRS);
-
-		Menu searchMenu = new Menu("Search Method");
-		MenuItem breathFirst = new MenuItem("Breath First");
-		breathFirst.setOnAction(e -> {
-			drawingPanel.pathSearch.Search = PathSearch.SearchMethod.BFS;
-			algorithmLabel.setText("Algorithm: BFS");
-			ResetGrid();
-		});
-
-		MenuItem depthFirst = new MenuItem("Depth First");
-		depthFirst.setOnAction(e -> {
-			drawingPanel.pathSearch.Search = PathSearch.SearchMethod.DFS;
-			algorithmLabel.setText("Algorithm: DFS");
-			ResetGrid();
-		});
-
-		MenuItem greedy = new MenuItem("Greedy Best First");
-		greedy.setOnAction(e -> {
-			drawingPanel.pathSearch.Search = PathSearch.SearchMethod.GREEDY;
-			algorithmLabel.setText("Algorithm: Greedy");
-			ResetGrid();
-		});
-
-		MenuItem uniform = new MenuItem("Uniform Cost");
-		uniform.setOnAction(e -> {
-			drawingPanel.pathSearch.Search = PathSearch.SearchMethod.UNIFORM;
-			algorithmLabel.setText("Algorithm: Uniform-Cost");
-			ResetGrid();
-		});
-
-		MenuItem AStar = new MenuItem("A* Search");
-		AStar.setOnAction(e -> {
-			drawingPanel.pathSearch.Search = PathSearch.SearchMethod.ASTAR;
-			algorithmLabel.setText("Algorithm: A*");
-			ResetGrid();
-		});
-
-		searchMenu.getItems().addAll(breathFirst, depthFirst, greedy, uniform, AStar);
-
-		Menu settingsMenu = new Menu("Settings");
-		MenuItem openSettingsItem = new MenuItem("Open Settings");
-		openSettingsItem.setOnAction(e -> {
-			Settings settings = new Settings(drawingPanel, this);
-			settings.show();
-		});
-
-		settingsMenu.getItems().add(openSettingsItem);
-		menuBar.getMenus().addAll(fileMenu, viewMenu, gridMenu, searchMenu, settingsMenu);
-
-		Button runBtn = new Button("Play");
-		runBtn.setOnAction(e -> {
-			startSearch();
-		});
-
-		Button pause = new Button("Pause");
-		pause.setOnAction(e -> {
-			if (searchTimeline != null) {
-				searchTimeline.pause();
-				statusLabel.setText("Paused...");
-			}
-		});
-
-		Button stepBtn = new Button("Step");
-		stepBtn.setOnAction(e -> {
-			stepForward();
-		});
-
-		Button fastForwardBtn = new Button("Fast Forward");
-		fastForwardBtn.setOnAction(e -> {
-			while (true) {
-				boolean running = drawingPanel.pathSearch.UpdateStep();
-				if (!running) {
-					break;
-				}
-			}
-			drawingPanel.draw();
-		});
-
-		Button resetBtn = new Button("Reset");
-		resetBtn.setOnAction(e -> {
-			ResetGrid();
-		});
-
-		Button showNeighbors = new Button("Show Neighbors");
-		showNeighbors.setOnAction(e -> {
-			drawingPanel.isShowingNeighbors = !drawingPanel.isShowingNeighbors;
-			drawingPanel.draw();
-		});
-
-		Button startTileBtn = new Button("Start Tile");
-		startTileBtn.setOnAction(e -> {
-			drawingPanel.tileSelect = DrawingPanel.TileSelect.START;
-		});
-
-		Button goalTileBtn = new Button("Goal Tile");
-		goalTileBtn.setOnAction(e -> {
-			drawingPanel.tileSelect = DrawingPanel.TileSelect.GOAL;
-		});
-
-		Button setState = new Button("Tiles Walkable");
-		setState.setOnAction(e -> {
-			if (drawingPanel.tileSelect.equals(DrawingPanel.TileSelect.STATE)) {
-				drawingPanel.tileSelect = DrawingPanel.TileSelect.NONE;
-				setState.setText("Tiles Walkable");
-			} else {
-				drawingPanel.tileSelect = DrawingPanel.TileSelect.STATE;
-				setState.setText("Tiles Unwalkable");
-			}
-		});
-
-		Button setWeight = new Button("Remove Weights");
-		setWeight.setOnAction(e -> {
-			if (drawingPanel.tileSelect.equals(DrawingPanel.TileSelect.WEIGHT)) {
-				drawingPanel.tileSelect = DrawingPanel.TileSelect.NONE;
-				setWeight.setText("Remove Weights");
-			} else {
-				drawingPanel.tileSelect = DrawingPanel.TileSelect.WEIGHT;
-				setWeight.setText("Add Weights");
-			}
-		});
-
-		ToolBar toolbar = new ToolBar(runBtn, pause, stepBtn, fastForwardBtn, resetBtn, showNeighbors, startTileBtn,
-				goalTileBtn, setState, setWeight);
-
-		statusLabel = new Label("Ready");
-		algorithmLabel = new Label("Algorithm: BFS");
-		timeLabel = new Label("Time: 0 ms");
-		nodesLabel = new Label("Visited: 0");
-		stepLabel = new Label("Steps: 0");
-
-		HBox statusBar = new HBox(20); // spacing
-		statusBar.getChildren().addAll(statusLabel, algorithmLabel, timeLabel, nodesLabel, stepLabel);
-
-		BorderPane root = new BorderPane();
-		root.setTop(new VBox(menuBar, toolbar));
-		SplitPane centerContainer = new SplitPane (dp2, drawingPanel);
-		root.setCenter(drawingPanel);
-		root.setBottom(statusBar);
-		Scene scene = new Scene(root, 1200, 800);
-
-		stage.setScene(scene);
-		stage.setTitle("Path Planner");
+		m.getItems().addAll(newItem, openItem, saveItem, new SeparatorMenuItem(), exitItem);
+		return m;
 	}
 
-	public void show() {
-		stage.show();
+	private Menu buildViewMenu() {
+		Menu m = new Menu("View");
+
+		MenuItem randomize = new MenuItem("Randomize Tile State");
+		randomize.setOnAction(e -> drawingPanel.RandomizeTileState());
+
+		MenuItem randomizeWeights = new MenuItem("Randomize Tile Weights");
+		randomizeWeights.setOnAction(e -> drawingPanel.RandomizeTileWeights());
+
+		MenuItem resetGrid = new MenuItem("Reset Grid");
+		resetGrid.setOnAction(e -> drawingPanel.ResetGrid());
+
+		MenuItem mazeItem = new MenuItem("Generate Maze");
+		mazeItem.setOnAction(e -> generateMaze());
+
+		m.getItems().addAll(randomize, randomizeWeights, resetGrid, new SeparatorMenuItem(), mazeItem);
+		return m;
+	}
+
+	private Menu buildGridMenu() {
+		Menu m = new Menu("Grid");
+
+		MenuItem sq4 = new MenuItem("Square Grid 4 Directions");
+		sq4.setOnAction(e -> {
+			drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_FOUR_DIR;
+			drawingPanel.tileShape = DrawingPanel.TileShape.SQUARE;
+			reinitAndReset();
+		});
+
+		MenuItem sq8 = new MenuItem("Square Grid 8 Directions");
+		sq8.setOnAction(e -> {
+			drawingPanel.pathSearch.DIRS = PathSearch.Directions.SQUARE_EIGHT_DIR;
+			drawingPanel.tileShape = DrawingPanel.TileShape.SQUARE;
+			reinitAndReset();
+		});
+
+		MenuItem hex6 = new MenuItem("Hexagon Grid 6 Directions");
+		hex6.setOnAction(e -> {
+			drawingPanel.pathSearch.DIRS = PathSearch.Directions.HEX_SIX_DIR;
+			drawingPanel.tileShape = DrawingPanel.TileShape.HEXAGON;
+			reinitAndReset();
+		});
+
+		MenuItem tri12 = new MenuItem("Triangle Grid 12 Directions");
+		tri12.setOnAction(e -> {
+			drawingPanel.pathSearch.DIRS = PathSearch.Directions.TRIANGLE_TWELVE_DIR;
+			drawingPanel.tileShape = DrawingPanel.TileShape.TRIANGLE;
+			reinitAndReset();
+		});
+
+		MenuItem clearItem = new MenuItem("Clear");
+		clearItem.setOnAction(e -> ResetGrid());
+
+		m.getItems().addAll(sq4, sq8, hex6, tri12, new SeparatorMenuItem(), clearItem);
+		return m;
+	}
+
+	private Menu buildSearchMenu() {
+		Menu m = new Menu("Search Method");
+		ToggleGroup group = new ToggleGroup();
+
+		addAlgoItem(m, group, "Breadth First", PathSearch.SearchMethod.BFS, "BFS", true);
+		addAlgoItem(m, group, "Depth First", PathSearch.SearchMethod.DFS, "DFS", false);
+		addAlgoItem(m, group, "Greedy Best First", PathSearch.SearchMethod.GREEDY, "Greedy", false);
+		addAlgoItem(m, group, "Uniform Cost", PathSearch.SearchMethod.UNIFORM, "Uniform", false);
+		addAlgoItem(m, group, "A* Search", PathSearch.SearchMethod.ASTAR, "A*", false);
+
+		return m;
+	}
+
+	private void addAlgoItem(Menu m, ToggleGroup g, String label, PathSearch.SearchMethod method, String displayName,
+			boolean selected) {
+		RadioMenuItem item = new RadioMenuItem(label);
+		item.setToggleGroup(g);
+		item.setSelected(selected);
+		item.setOnAction(e -> {
+			drawingPanel.pathSearch.Search = method;
+			algorithmLabel.setText("Algorithm: " + displayName);
+			ResetGrid();
+		});
+		m.getItems().add(item);
+	}
+
+	private Menu buildSettingsMenu() {
+		Menu m = new Menu("Settings");
+		MenuItem openSettings = new MenuItem("Open Settings");
+		openSettings.setOnAction(e -> new Settings(drawingPanel, this).show());
+		m.getItems().add(openSettings);
+		return m;
+	}
+
+	// ── Tool bar ─────────────────────────────────────────────
+	private ToolBar buildToolBar() {
+		ToolBar tb = new ToolBar();
+		tb.getStyleClass().add("tool-bar");
+
+		// Playback group
+		Button play = accentBtn("▶  Play", "btn-play");
+		Button pause = accentBtn("⏸  Pause", "btn-pause");
+		Button step = toolBtn("⏭  Step");
+		Button ff = toolBtn("⏩  Fast Fwd");
+		Button reset = accentBtn("↺  Reset", "btn-reset");
+
+		play.setOnAction(e -> startSearch());
+		pause.setOnAction(e -> {
+			if (searchTimeline != null)
+				searchTimeline.pause();
+			statusLabel.setText("⏸ Paused");
+		});
+		step.setOnAction(e -> stepForward());
+		ff.setOnAction(e -> {
+			while (drawingPanel.pathSearch.UpdateStep()) {
+			}
+			drawingPanel.draw();
+		});
+		reset.setOnAction(e -> ResetGrid());
+
+		// Tool group
+		Button showN = toolBtn("Show Neighbors");
+		Button startT = toolBtn("Start Tile");
+		Button goalT = toolBtn("Goal Tile");
+		stateBtn  = toolBtn("Tiles Walkable");
+        weightBtn = toolBtn("Remove Weights");
+
+        showN.setOnAction(e -> {
+            drawingPanel.isShowingNeighbors = !drawingPanel.isShowingNeighbors;
+            drawingPanel.draw();
+        });
+        startT.setOnAction(e -> drawingPanel.tileSelect = DrawingPanel.TileSelect.START);
+        goalT.setOnAction(e  -> drawingPanel.tileSelect = DrawingPanel.TileSelect.GOAL);
+
+        stateBtn.setOnAction(e -> {
+            if (drawingPanel.tileSelect == DrawingPanel.TileSelect.STATE) {
+                drawingPanel.tileSelect = DrawingPanel.TileSelect.NONE;
+                stateBtn.setText("Tiles Walkable");
+            } else {
+                drawingPanel.tileSelect = DrawingPanel.TileSelect.STATE;
+                stateBtn.setText("Tiles Unwalkable");
+            }
+        });
+
+        weightBtn.setOnAction(e -> {
+            if (drawingPanel.tileSelect == DrawingPanel.TileSelect.WEIGHT) {
+                drawingPanel.tileSelect = DrawingPanel.TileSelect.NONE;
+                weightBtn.setText("Remove Weights");
+            } else {
+                drawingPanel.tileSelect = DrawingPanel.TileSelect.WEIGHT;
+                weightBtn.setText("Add Weights");
+            }
+        });
+
+		tb.getItems().addAll(play, pause, step, ff, reset, new Separator(), showN, startT, goalT, new Separator(),
+				stateBtn, weightBtn);
+		return tb;
+	}
+
+	private Button toolBtn(String text) {
+		Button b = new Button(text);
+		b.getStyleClass().add("button");
+		return b;
+	}
+
+	private Button accentBtn(String text, String styleClass) {
+		Button b = new Button(text);
+		b.getStyleClass().addAll("button", styleClass);
+		return b;
+	}
+
+	private HBox buildStatusBar() {
+		HBox bar = new HBox();
+		bar.getStyleClass().add("status-bar");
+		bar.setAlignment(Pos.CENTER_LEFT);
+
+		statusLabel.getStyleClass().addAll("status-label", "status-ready");
+
+		// Spacer pushes status to the right
+		Region spacer = new Region();
+		HBox.setHgrow(spacer, Priority.ALWAYS);
+
+		bar.getChildren().addAll(statusLabel, spacer, algorithmLabel, sep(), timeLabel, sep(), nodesLabel, sep(),
+				stepLabel);
+		return bar;
+	}
+
+	private Label sep() {
+		Label l = new Label(" | ");
+		l.getStyleClass().add("status-label");
+		return l;
+	}
+
+	private void generateMaze() {
+		mazeGen.Start(drawingPanel.grid, 0, 0);
+		boolean generating;
+		while (true) {
+			PathSearch.Directions dirs = drawingPanel.pathSearch.DIRS;
+			if (dirs == PathSearch.Directions.SQUARE_FOUR_DIR || dirs == PathSearch.Directions.SQUARE_EIGHT_DIR) {
+				generating = mazeGen.MazeStep(drawingPanel.grid, dirs);
+			} else if (dirs == PathSearch.Directions.HEX_SIX_DIR) {
+				generating = mazeGen.HexStep(drawingPanel.grid);
+			} else {
+				generating = mazeGen.TriangleStep(drawingPanel.grid);
+			}
+			if (!generating)
+				break;
+		}
+		mazeGen.ConnectSpecialTile(drawingPanel.pathSearch.StartTile);
+		mazeGen.ConnectSpecialTile(drawingPanel.pathSearch.GoalTile);
+		drawingPanel.draw();
+	}
+
+	private void reinitAndReset() {
+		drawingPanel.pathSearch.Initialize(drawingPanel.grid);
+		drawingPanel.pathSearch.Enter(0, 0, drawingPanel.getGridWidth() - 1, drawingPanel.getGridHeight() - 1);
+		ResetGrid();
 	}
 
 	private void startSearch() {
@@ -307,12 +323,13 @@ public class MainWindow {
 			searchTimeline.stop();
 		}
 		long startTime = System.nanoTime();
-		statusLabel.setText("Running...");
+		setStatus("● Running", "status-running");
 
 		searchTimeline = new Timeline(new KeyFrame(Duration.millis(stepDelay), e -> {
 			boolean running = drawingPanel.pathSearch.UpdateStep();
 			drawingPanel.draw();
 			stepCount++;
+			
 			nodesLabel.setText("Visited: " + drawingPanel.pathSearch.VisitedNodes.size());
 			stepLabel.setText("Setp: " + stepCount);
 			long endTime = System.nanoTime();
@@ -324,6 +341,7 @@ public class MainWindow {
 				endTime = System.nanoTime();
 				durationMs = (endTime - startTime) / 1_000_000;
 				timeLabel.setText("Time: " + durationMs + " ms");
+				setStatus("● Done", "status-done");
 			}
 		}));
 
@@ -341,12 +359,15 @@ public class MainWindow {
 
 		boolean running = drawingPanel.pathSearch.UpdateStep();
 		drawingPanel.draw();
-		statusLabel.setText("Single Iteration");
-		nodesLabel.setText("Visited: " + drawingPanel.pathSearch.VisitedNodes.size());
-
-		// Optional: stop timeline if user was stepping manually
+		stepCount++;
+		stepLabel.setText("Steps: " + stepCount);
+        nodesLabel.setText("Visited: " + drawingPanel.pathSearch.VisitedNodes.size());
+        setStatus("● Step", "status-running");
+        
+		
 		if (!running && searchTimeline != null) {
 			searchTimeline.stop();
+			setStatus("● Done", "status-done");
 		}
 	}
 
@@ -358,9 +379,10 @@ public class MainWindow {
 
 		// Reset the search
 		drawingPanel.pathSearch.ResetSearch();
-		statusLabel.setText("Ready");
-		timeLabel.setText("Time: 0 ms");
-		nodesLabel.setText("Visited: 0");
+		stepLabel.setText("Steps: 0");
+        nodesLabel.setText("Visited: 0");
+        timeLabel.setText("Time: 0 ms");
+        setStatus("● Ready", "status-ready");
 
 		// Redraw the panel
 		drawingPanel.draw();
@@ -378,6 +400,18 @@ public class MainWindow {
 		if (searchTimeline != null) {
 			searchTimeline.stop();
 		}
+	}
+	
+	private void setStatus(String text, String styleClass) {
+        statusLabel.setText(text);
+        statusLabel.getStyleClass().removeAll("status-ready", "status-running", "status-done");
+        statusLabel.getStyleClass().add(styleClass);
+    }
+
+	private Label makeStatusLabel(String prefix, String init) {
+		Label l = new Label(prefix + init);
+		l.getStyleClass().add("status-label");
+		return l;
 	}
 
 }

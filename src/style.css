@@ -1,0 +1,223 @@
+/* ── Root palette ─────────────────────────────────────────── */
+.root {
+    -fx-base:             #1a1a2e;
+    -fx-background:       hotpink;
+    -fx-control-inner-background: #16213e;
+}
+    --bg-dark:    #1a1a2e;
+    --bg-mid:     #16213e;
+    --bg-panel:   #0f3460;
+    --neon-blue:  #00d4ff;
+    --neon-pink:  #ff2d78;
+    --neon-green: #00ff88;
+    --text:       #e0e0e0;
+    --text-dim:   #7a7a9a;
+    --border:     #0f3460;
+
+
+/* ── Scene / root pane ────────────────────────────────────── */
+.scene-root {
+    -fx-background-color: #1a1a2e;
+}
+
+/* ── Menu bar ─────────────────────────────────────────────── */
+.menu-bar {
+    -fx-background-color: #0d0d1a;
+    -fx-border-color: transparent transparent #0f3460 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 2 8 2 8;
+}
+
+.menu-bar .label {
+    -fx-text-fill: #b0b0cc;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+}
+
+.menu-bar .menu:hover > .label,
+.menu-bar .menu:focused > .label,
+.menu-bar .menu:showing > .label {
+    -fx-text-fill: #00d4ff;
+}
+
+.menu-bar .menu:showing {
+    -fx-background-color: #0f3460;
+}
+
+.context-menu {
+    -fx-background-color: #0d0d1a;
+    -fx-border-color: #0f3460;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,212,255,0.25), 12, 0, 0, 4);
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 6 16 6 16;
+}
+
+.menu-item .label {
+    -fx-text-fill: #b0b0cc;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+}
+
+.menu-item:focused,
+.menu-item:hover {
+    -fx-background-color: #0f3460;
+}
+
+.menu-item:focused > .label,
+.menu-item:hover > .label {
+    -fx-text-fill: #00d4ff;
+}
+
+.separator > .line {
+    -fx-border-color: #0f3460;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────── */
+.tool-bar {
+    -fx-background-color: #0d0d1a;
+    -fx-border-color: transparent transparent #0f3460 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 6 10 6 10;
+    -fx-spacing: 6;
+}
+
+/* ── Base button style ────────────────────────────────────── */
+.tool-bar .button {
+    -fx-background-color: #0d0d1a;
+    -fx-text-fill: #b0b0cc;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 4;
+    -fx-border-color: #1a4a80;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.tool-bar .button:hover {
+    -fx-background-color: #1a4a80;
+    -fx-text-fill: #00d4ff;
+    -fx-border-color: #00d4ff;
+    -fx-effect: dropshadow(gaussian, rgba(0,212,255,0.4), 8, 0, 0, 0);
+}
+
+.tool-bar .button:pressed {
+    -fx-background-color: #00d4ff;
+    -fx-text-fill: #0d0d1a;
+    -fx-effect: dropshadow(gaussian, rgba(0,212,255,0.7), 12, 0, 0, 0);
+}
+
+/* ── Accent buttons ───────────────────────────────────────── */
+/* Play — neon green */
+.btn-play {
+    -fx-background-color: #003320;
+    -fx-text-fill: #00ff88;
+    -fx-border-color: #00ff88;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+.btn-play:hover {
+    -fx-background-color: #00ff88;
+    -fx-text-fill: #0d0d1a;
+    -fx-effect: dropshadow(gaussian, rgba(0,255,136,0.6), 10, 0, 0, 0);
+    -fx-border-color: #00ff88;
+}
+.btn-play:pressed {
+    -fx-background-color: #00cc6a;
+    -fx-text-fill: #0d0d1a;
+}
+
+/* Pause — neon yellow */
+.btn-pause {
+    -fx-background-color: red;
+    -fx-text-fill: #ffd700;
+    -fx-border-color: #ffd700;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+.btn-pause:hover {
+    -fx-background-color: #ffd700;
+    -fx-text-fill: #0d0d1a;
+    -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.6), 10, 0, 0, 0);
+    -fx-border-color: #ffd700;
+}
+
+/* Reset — neon pink */
+.btn-reset {
+    -fx-background-color: #2a0010;
+    -fx-text-fill: #ff2d78;
+    -fx-border-color: #ff2d78;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+.btn-reset:hover {
+    -fx-background-color: #ff2d78;
+    -fx-text-fill: #0d0d1a;
+    -fx-effect: dropshadow(gaussian, rgba(255,45,120,0.6), 10, 0, 0, 0);
+    -fx-border-color: #ff2d78;
+}
+
+/* ── Toolbar separator ────────────────────────────────────── */
+.tool-bar .separator {
+    -fx-background-color: #0f3460;
+    -fx-pref-width: 1;
+    -fx-pref-height: 24;
+}
+
+/* ── Status bar ───────────────────────────────────────────── */
+.status-bar {
+    -fx-background-color: #0d0d1a;
+    -fx-border-color: #0f3460 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 4 12 4 12;
+    -fx-spacing: 20;
+}
+
+.status-label {
+    -fx-text-fill: #7a7a9a;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+}
+
+.status-label .value {
+    -fx-text-fill: #00d4ff;
+    -fx-font-weight: bold;
+}
+
+/* Individual status segments */
+.status-ready   { -fx-text-fill: #00ff88; }
+.status-running { -fx-text-fill: #ffd700; }
+.status-done    { -fx-text-fill: #00d4ff; }
+
+/* ── Grid canvas area ─────────────────────────────────────── */
+.grid-pane {
+    -fx-background-color: #12122a;
+    -fx-border-color: #0f3460;
+    -fx-border-width: 1;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+.scroll-bar {
+    -fx-background-color: #0d0d1a;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #0f3460;
+    -fx-background-radius: 4;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #00d4ff;
+}
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+}
